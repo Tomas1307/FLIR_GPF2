@@ -2,3 +2,6 @@
 *.jpg
 *.avif
 data/
+Multi-class MineriaIlegal Detection.v1-YO/
+runs/
+*.pt
