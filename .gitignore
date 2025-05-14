@@ -7,3 +7,9 @@ runs/
 *.pt
 *.zip
 Multi-class Cross Validation/
+test/
+train/
+val/
+*.yaml
+labels/
+images/
