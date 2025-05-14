@@ -6,3 +6,4 @@ Multi-class MineriaIlegal Detection.v1-YOLO/
 runs/
 *.pt
 *.zip
+Multi-class Cross Validation/
