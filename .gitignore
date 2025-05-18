@@ -13,3 +13,5 @@ val/
 *.yaml
 labels/
 images/
+kfold_results_modelo_yolov11_dataset_completo/
+kfold_results_modelo_yolov11_dataset_filtrado/
