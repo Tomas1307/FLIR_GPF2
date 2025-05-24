@@ -11,7 +11,6 @@ import cv2
 from collections import defaultdict
 import dash_bootstrap_components as dbc
 
-# Configuración de constantes
 CLASS_NAMES_MAP = {
     0: 'Vehiculos',
     1: 'Bodegas',
@@ -20,19 +19,17 @@ CLASS_NAMES_MAP = {
     4: 'Zonas de mineria ilegal'
 }
 
-# Professional Color Palette for charts
 PROFESSIONAL_COLORS = px.colors.sequential.Plotly3
 
-# Define colors for bounding boxes and labels
 BOX_COLORS = {
-    0: (255, 100, 100),  # Red for Vehiculos (BGR)
-    1: (100, 255, 100),  # Green for Bodegas
-    2: (100, 100, 255),  # Blue for Caminos
-    3: (255, 255, 100),  # Yellow for Rios
-    4: (255, 100, 255),  # Magenta for Zonas de mineria ilegal
+    0: (255, 100, 100), 
+    1: (100, 255, 100),  
+    2: (100, 100, 255),  
+    3: (255, 255, 100), 
+    4: (255, 100, 255),  
 }
 
-TARGET_CLASS_HIGHLIGHT_COLOR = (255, 200, 0)  # Orange (BGR)
+TARGET_CLASS_HIGHLIGHT_COLOR = (255, 200, 0) 
 
 # Base directories for datasets
 DATASET_BASE_PATHS = {
@@ -243,10 +240,10 @@ def register_exploration_callbacks(app):
          Output("class-distribution", "figure"),
          Output("class-selector", "options"),
          Output("dataset-stats", "children")],
-        Input("tabs", "active_tab")  # FIXED: Changed from "value" to "active_tab"
+        Input("tabs", "active_tab")  
     )
     def update_overview_and_stats(tab):
-        if tab != 'tab-exploration':  # FIXED: Changed from 'tab-overview' to 'tab-exploration'
+        if tab != 'tab-exploration': 
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
         dataset_key = "general"
@@ -257,7 +254,6 @@ def register_exploration_callbacks(app):
         image_resolutions = analysis_results['resolutions']
         class_names = get_class_names_for_display()
 
-        # Dataset Overview
         class_counts_named = {CLASS_NAMES_MAP.get(int(cid), f'Clase {cid}'): count 
                             for cid, count in class_counts_raw.items()}
         full_class_counts = {name: class_counts_named.get(name, 0) for name in class_names}
@@ -271,7 +267,6 @@ def register_exploration_callbacks(app):
             html.P(f"Datos de labels procesados desde archivos .txt", className="small text-muted")
         ])
 
-        # Class Distribution Graph
         df_distribution = pd.DataFrame({'Class': sorted_class_names, 'Count': sorted_class_counts})
         fig_class_distribution = px.bar(df_distribution, x='Class', y='Count',
                      title="Conteo de Detecciones por Clase",
@@ -285,10 +280,8 @@ def register_exploration_callbacks(app):
         fig_class_distribution.update_xaxes(showgrid=False, zeroline=False, color="white")
         fig_class_distribution.update_yaxes(gridcolor='#444', zeroline=False, color="white")
 
-        # Class Selector Options
         options_class_selector = [{'label': name, 'value': i} for i, name in enumerate(class_names)]
 
-        # Detailed Dataset Stats
         total_detections = sum(full_class_counts.values())
         class_data_for_table = []
         for class_name in class_names:
@@ -300,7 +293,6 @@ def register_exploration_callbacks(app):
                 "Porcentaje": f"{percentage:.1f}%"
             })
 
-        # Mock train/val/test split values
         split_values = [70, 20, 10]
         split_names = ['Train', 'Validation', 'Test']
 

@@ -16,22 +16,18 @@ import dash_bootstrap_components as dbc
 from pathlib import Path 
 import random
 
-# Import functions from your separate files
 from .yolo_prediction import get_prediction_tab_content, register_prediction_callbacks, check_models_availability
 from .exploracion import get_exploration_tab_content, register_exploration_callbacks, CLASS_NAMES_MAP as EXPLORATION_CLASS_NAMES_MAP 
 from .preprocesamiento_imagenes import get_preprocessing_tab_content, register_preprocessing_callbacks 
 
-# Configuración de la app
 app = dash.Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.DARKLY, '/assets/style.css'])
 app.title = "Detección de Minería Ilegal - Dashboard"
 
-# IMPORTANT: Register callbacks from all modules
 register_prediction_callbacks(app)
 register_exploration_callbacks(app)
 register_preprocessing_callbacks(app) 
 
 
-# Define the layout of the app
 app.layout = dbc.Container([
     dbc.Row(dbc.Col(html.H1("Dashboard de Detección de Minería Ilegal", 
                             className="text-center text-primary my-4 display-4"), 
@@ -44,10 +40,9 @@ app.layout = dbc.Container([
     html.Div(id="tab-content", className="p-4 bg-dark text-light border rounded")
 ], fluid=True, className="bg-dark")
 
-# Callback to update tab content
 @app.callback(
     Output('tab-content', 'children'),
-    Input('tabs', 'active_tab') # CHANGED: from 'value' to 'active_tab'
+    Input('tabs', 'active_tab') 
 )
 def render_tab_content(tab_value):
     if tab_value == 'tab-prediction':

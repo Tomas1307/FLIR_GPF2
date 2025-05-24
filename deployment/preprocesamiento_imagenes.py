@@ -9,8 +9,7 @@ import dash_bootstrap_components as dbc
 from pathlib import Path
 import random
 
-# Base directory for dataset
-DATASET_BASE_PATH = "YOLO_data/modelo_yolov11_dataset_completo_preprocesado" # Correct path for preprocessed dataset
+DATASET_BASE_PATH = "YOLO_data/modelo_yolov11_dataset_completo_preprocesado"
 
 def reducir_ruido_sal_pimienta(imagen, umbral_deteccion=0.01, tamano_kernel=3):
     """
@@ -24,22 +23,18 @@ def reducir_ruido_sal_pimienta(imagen, umbral_deteccion=0.01, tamano_kernel=3):
     Returns:
         Tupla (imagen_procesada, ruido_detectado)
     """
-    # Convertir a escala de grises para análisis
     gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY) if len(imagen.shape) > 2 else imagen.copy()
 
-    # Detectar píxeles muy oscuros y muy brillantes (potencial ruido s&p)
     num_pixels = gris.shape[0] * gris.shape[1]
     if num_pixels == 0: 
         return imagen.copy(), False
     
-    muy_oscuros = np.sum(gris < 20) # Píxeles muy cercanos al negro
-    muy_brillantes = np.sum(gris > 235) # Píxeles muy cercanos al blanco
+    muy_oscuros = np.sum(gris < 20) 
+    muy_brillantes = np.sum(gris > 235) 
 
-    # Calcular la proporción de píxeles extremos
     proporcion_extremos = (muy_oscuros + muy_brillantes) / num_pixels
 
     if proporcion_extremos >= umbral_deteccion:
-        # Aplicar filtro mediana si se detecta suficiente ruido
         imagen_procesada = cv2.medianBlur(imagen, tamano_kernel)
         return imagen_procesada, True
     else:
@@ -78,7 +73,6 @@ def convertir_escala_grises(imagen):
         Imagen en escala de grises (BGR).
     """
     gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
-    # Convertir de nuevo a BGR para consistencia en la visualización
     return cv2.cvtColor(gris, cv2.COLOR_GRAY2BGR)
 
 def get_random_image_paths(num_images=3):
@@ -88,7 +82,6 @@ def get_random_image_paths(num_images=3):
     dataset_base = Path(DATASET_BASE_PATH)
     all_images = []
     
-    # Check all splits (train, val, test)
     for split in ['train', 'val', 'test']:
         images_dir = dataset_base / split / "images"
         if images_dir.exists():
@@ -102,14 +95,12 @@ def get_random_image_paths(num_images=3):
     
     image_label_paths = []
     for img_path in selected_images:
-        # Determine which split this image belongs to
-        split = img_path.parent.parent.name  # Get the split folder name (train/val/test)
+        split = img_path.parent.parent.name 
         label_path = dataset_base / split / "labels" / f"{img_path.stem}.txt"
         
         if label_path.exists():
             image_label_paths.append((img_path, label_path))
         else:
-            # Include image even if label doesn't exist for preprocessing examples
             image_label_paths.append((img_path, None))
     
     return image_label_paths
@@ -142,7 +133,6 @@ def generate_preprocessing_examples(num_images=3):
     """
     Genera y muestra ejemplos de imágenes antes y después del preprocesamiento.
     """
-    # Debug: Check if base path exists
     dataset_base = Path(DATASET_BASE_PATH)
     if not dataset_base.exists():
         return dbc.Alert(
@@ -154,7 +144,6 @@ def generate_preprocessing_examples(num_images=3):
     image_label_paths = get_random_image_paths(num_images)
     
     if not image_label_paths:
-        # Debug: Show what paths were checked
         checked_paths = []
         for split in ['train', 'val', 'test']:
             images_dir = dataset_base / split / "images"
@@ -218,7 +207,6 @@ def create_preprocessing_layout():
                 html.Hr(className="my-4 border-light")
             ]), width=12)
         ]),
-        # This ID must be present in the layout returned by this function
         dbc.Row(id='preprocessing-examples-container', className="my-4") 
     ], fluid=True, className="py-4 bg-dark")
     
@@ -227,12 +215,12 @@ def register_preprocessing_callbacks(app):
     
     @app.callback(
         Output('preprocessing-examples-container', 'children'),
-        Input('tabs', 'active_tab')  # FIXED: Changed from 'value' to 'active_tab'
+        Input('tabs', 'active_tab') 
     )
     def update_preprocessing_examples(tab_value):
         if tab_value == 'tab-preprocessing':
             return generate_preprocessing_examples(num_images=3)
-        return html.Div([]) # Return an empty div if not on this tab to clear content
+        return html.Div([]) 
 
 def get_preprocessing_tab_content():
     """Función principal que retorna el contenido de la pestaña de preprocesamiento"""

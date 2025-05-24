@@ -16,7 +16,6 @@ import time
 from ultralytics import YOLO
 import yaml
 
-# Configuración de modelos con rutas de pesos, dataset YAML y nombres descriptivos
 MODEL_CONFIGS = {
     "filtered": {
         "name": "Finetuning datos filtrados sin preprocesamiento - Mejor modelo general",
@@ -32,7 +31,6 @@ MODEL_CONFIGS = {
     }
 }
 
-# Mapeo de clases (debe coincidir con tu configuración principal)
 CLASS_NAMES_MAP = {
     0: 'Vehiculos',
     1: 'Bodegas', 
@@ -41,7 +39,6 @@ CLASS_NAMES_MAP = {
     4: 'Zonas de mineria ilegal'
 }
 
-# Cache para modelos cargados y información de datasets
 _model_cache = {}
 _dataset_info_cache = {}
 
@@ -100,15 +97,12 @@ def predict_image(image_data, model_key, conf_threshold=0.25, imgsz=640):
         dict con resultados de la predicción
     """
     try:
-        # Cargar modelo
         model = load_model(model_key)
         if model is None:
             return {"error": f"No se pudo cargar el modelo {MODEL_CONFIGS[model_key]['name']}"}
-        
-        # Obtener nombres de clases específicos del modelo
+    
         class_names = get_class_names_from_yaml(model_key)
         
-        # Decodificar imagen
         if ',' in image_data:
             image_bytes = base64.b64decode(image_data.split(',')[1])
         else:
@@ -116,26 +110,20 @@ def predict_image(image_data, model_key, conf_threshold=0.25, imgsz=640):
         
         image = Image.open(io.BytesIO(image_bytes))
         
-        # Convertir a formato OpenCV (RGB -> BGR)
         image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         
-        # Realizar predicción
         start_time = time.time()
         results = model(image_cv, conf=conf_threshold, imgsz=imgsz, verbose=False)
         inference_time = time.time() - start_time
         
-        # Procesar resultados
         result = results[0]
         
-        # Obtener imagen con predicciones dibujadas
         pred_image = result.plot()
         pred_image_rgb = cv2.cvtColor(pred_image, cv2.COLOR_BGR2RGB)
         
-        # Convertir a base64
         _, buffer = cv2.imencode('.png', pred_image_rgb)
         pred_image_b64 = base64.b64encode(buffer).decode('utf-8')
         
-        # Extraer métricas y detecciones
         detections = []
         class_counts = defaultdict(int)
         confidences = []
@@ -145,7 +133,6 @@ def predict_image(image_data, model_key, conf_threshold=0.25, imgsz=640):
                 class_id = int(box.cls.item())
                 confidence = float(box.conf.item())
                 
-                # Usar nombres de clases del YAML o fallback
                 if isinstance(class_names, dict):
                     class_name = class_names.get(class_id, f'Clase {class_id}')
                 elif isinstance(class_names, list) and class_id < len(class_names):
@@ -153,7 +140,6 @@ def predict_image(image_data, model_key, conf_threshold=0.25, imgsz=640):
                 else:
                     class_name = CLASS_NAMES_MAP.get(class_id, f'Clase {class_id}')
                 
-                # Coordenadas del bounding box
                 bbox = box.xyxy[0].tolist()  # [x1, y1, x2, y2]
                 
                 detections.append({
@@ -166,7 +152,6 @@ def predict_image(image_data, model_key, conf_threshold=0.25, imgsz=640):
                 class_counts[class_name] += 1
                 confidences.append(confidence)
         
-        # Calcular métricas
         metrics = {
             'total_detections': len(detections),
             'inference_time_ms': round(inference_time * 1000, 2),
@@ -195,7 +180,6 @@ def create_model_info_card(model_key):
     config = MODEL_CONFIGS[model_key]
     dataset_info = load_dataset_info(model_key)
     
-    # Verificar disponibilidad de archivos
     weights_exists = os.path.exists(config["weights_path"])
     yaml_exists = os.path.exists(config["yaml_path"])
     
@@ -255,7 +239,6 @@ def create_metrics_cards(metrics, model_info=None):
         ], className="text-center bg-dark border-0 shadow-sm"),
     ]
     
-    # Agregar card con información del modelo si está disponible
     if model_info:
         cards.append(
             dbc.Card([
@@ -325,7 +308,6 @@ def create_prediction_layout():
                            className="section-title text-center my-4 text-primary"), width=12)
         ]),
         
-        # Sección de carga de imagen y configuración
         dbc.Row([
             dbc.Col(dbc.Card([
                 dbc.CardHeader(html.H4("Configuración de Predicción", className="card-title text-primary")),
@@ -383,10 +365,8 @@ def create_prediction_layout():
             ], className="mb-4 shadow-sm bg-dark text-light"), width=12)
         ]),
         
-        # Sección de resultados
         html.Div(id='prediction-results', className="mb-4"),
         
-        # Almacenar datos de imagen cargada
         dcc.Store(id='stored-image-data')
         
     ], fluid=True, className="py-4 bg-dark")
@@ -414,7 +394,6 @@ def register_prediction_callbacks(app):
             return None, ""
         
         try:
-            # Validar tipo de archivo
             if filename and not filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                 return None, dbc.Alert("Por favor selecciona un archivo de imagen válido (PNG, JPG, JPEG)", 
                                      color="danger", className="mt-2")
@@ -436,13 +415,11 @@ def register_prediction_callbacks(app):
         if image_data is None:
             return html.Div()
         
-        # Realizar predicción
         results = predict_image(image_data, model_key, confidence)
         
         if 'error' in results:
             return dbc.Alert(results['error'], color="danger", className="mt-3")
         
-        # Mostrar imagen original y predicción lado a lado
         original_image_section = html.Div([
             html.H5("Imagen Original", className="text-center text-light mb-3"),
             html.Img(src=image_data, style={'width': '100%', 'height': 'auto', 'border-radius': '5px'})
@@ -453,30 +430,25 @@ def register_prediction_callbacks(app):
             html.Img(src=results['predicted_image'], style={'width': '100%', 'height': 'auto', 'border-radius': '5px'})
         ])
         
-        # Crear componentes de resultados
         metrics_cards = create_metrics_cards(results['metrics'], results)
         class_chart = create_class_distribution_chart(results['metrics']['class_distribution'])
         detections_table = create_detections_table(results['detections'])
         
         return html.Div([
-            # Información del modelo utilizado
             dbc.Alert([
                 html.Strong("Modelo utilizado: "), results['model_name'],
                 html.Br(),
                 html.Small(f"Dataset: {results['dataset_yaml']}", className="text-muted")
             ], color="info", className="mb-4"),
             
-            # Imágenes lado a lado
             dbc.Row([
                 dbc.Col(original_image_section, md=6, className="mb-4"),
                 dbc.Col(predicted_image_section, md=6, className="mb-4")
             ]),
             
-            # Métricas
             html.H4("Métricas de Predicción", className="text-primary mb-3"),
             metrics_cards,
             
-            # Gráfico y tabla
             dbc.Row([
                 dbc.Col([
                     html.H5("Distribución de Clases", className="text-light mb-3"),
@@ -493,7 +465,6 @@ def get_prediction_tab_content():
     """Función principal que retorna el contenido de la pestaña de predicción"""
     return create_prediction_layout()
 
-# Función para verificar disponibilidad de modelos y datasets
 def check_models_availability():
     """Verifica si los archivos de modelo y dataset YAML existen"""
     available_models = {}
@@ -510,7 +481,6 @@ def check_models_availability():
     return available_models
 
 if __name__ == "__main__":
-    # Test básico de la funcionalidad
     print("Verificando disponibilidad de modelos y datasets...")
     models_status = check_models_availability()
     for model, status in models_status.items():
