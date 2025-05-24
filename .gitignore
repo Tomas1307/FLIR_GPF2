@@ -2,17 +2,12 @@
 *.jpg
 *.avif
 data/
-Multi-class MineriaIlegal Detection.v1-YOLO/
-runs/
-*.pt
-*.zip
-Multi-class Cross Validation/
 test/
 train/
 val/
 *.yaml
 labels/
 images/
-kfold_results_modelo_yolov11_dataset_completo/
-kfold_results_modelo_yolov11_dataset_filtrado/
-*.csv
+experiments/
+mlruns/
+YOLO_data/
