@@ -114,6 +114,8 @@ Se definieron **5 clases** principales para el análisis:
 
 ### Configuración Ganadora: Conservative
 
+Identificamos que el modelo tiene mas capacidad para aprender, consideramos que pueden ser 100 o mas epocas, pero por tiempo y restricciones computacionales no pudimos evaluar mas de 48 épocas.
+
 **Métricas del modelo Conservative con dataset preprocesado:**
 
 | Clase | Precision | Recall | mAP@50 | mAP@50-95 |
