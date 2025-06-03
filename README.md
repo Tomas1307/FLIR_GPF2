@@ -2,6 +2,12 @@
 
 Este proyecto propone un modelo basado en YOLOv11 para la detección de campamentos de minería ilegal en videos aéreos capturados con cámaras FLIR. El objetivo principal es maximizar el recall para la detección de zonas de minería ilegal mediante búsqueda exhaustiva de hiperparámetros y estrategias de preprocesamiento optimizadas.
 
+## Datos
+
+Preprocesamiento dataset: https://drive.google.com/file/d/1-9u4OphZ50NWHwjtRQN1js9J3LTLU9kP/view?usp=sharing
+
+Finetuning resultados: https://drive.google.com/file/d/1hNvvQ8y9eZCxFTN3wtEIuTm07dI5CIev/view?usp=sharing
+
 ## Tablero
 
 http://20.42.84.158:8050/
