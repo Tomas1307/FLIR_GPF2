@@ -8,17 +8,16 @@ from datetime import datetime
 
 class ConservativeFinalTraining:
     def __init__(self):
-        # Configuración ganadora directamente codificada
         self.best_config = {
             'model_size': 'yolo11m.pt',
             'batch_size': 40,
-            'lr0': 0.005,          # CLAVE: LR conservador
+            'lr0': 0.005,          
             'lrf': 0.01,
             'cos_lr': True,
             'weight_decay': 0.001,
-            'dropout': 0.1,        # CLAVE: Regularización ligera
-            'mosaic': 0.8,         # CLAVE: No máximo
-            'mixup': 0.0,          # CLAVE: Sin mixup
+            'dropout': 0.1,       
+            'mosaic': 0.8,        
+            'mixup': 0.0,          
             'imgsz': 640,
             'name': 'conservative_winner'
         }
@@ -45,8 +44,7 @@ class ConservativeFinalTraining:
                 }
         
         run_name = f"final_training_conservative_{Path(dataset_path).name}"
-        # Configuración conservative específica para minería ilegal
-        # ESTO es lo que sabemos que funciona (86.25% recall):
+
         train_args = {
                 'data': str(Path(dataset_path)/'dataset.yaml'),
                 'epochs': 100,
@@ -59,14 +57,13 @@ class ConservativeFinalTraining:
                 'dropout': config['dropout'],
                 'mosaic': config['mosaic'],
                 'mixup': config['mixup'],
-                'patience': 3,  # Early stopping
-                'save_period': -1,  # No guardar checkpoints intermedios
+                'patience': 3,
+                'save_period': -1, 
                 'name': run_name,
                 'exist_ok': True,
                 'verbose': False,
                 'workers': 16,
                 
-                # 🎯 CONFIGURACIONES ESPECÍFICAS PARA RECALL DE MINERÍA
                 'conf': 0.15,        # Confidence threshold bajo para detectar más
                 'iou': 0.6,          # IoU threshold más permisivo  
                 'max_det': 500,      # Más detecciones por imagen
@@ -77,7 +74,6 @@ class ConservativeFinalTraining:
                 'mask_ratio': 4,       # Mask downsampling ratio
                 'boxes': True,         # Train bounding boxes
                 
-                # Optimizaciones de pérdida para clase desbalanceada
                 'cls': 0.5,      # Classification loss weight
                 'box': 7.5,      # Box loss weight (alto para buena localización)
                 'dfl': 1.5,      # Distribution focal loss weight
@@ -85,7 +81,6 @@ class ConservativeFinalTraining:
                 'kobj': 1.0,     # Keypoint obj loss weight
                 'label_smoothing': 0.0,  # Sin smoothing para preservar clase rara
                 
-                # Augmentaciones específicas para minería
                 'hsv_h': 0.015,  # Hue augmentation (ligero)
                 'hsv_s': 0.7,    # Saturation augmentation
                 'hsv_v': 0.4,    # Value augmentation
@@ -95,7 +90,7 @@ class ConservativeFinalTraining:
                 'shear': 0.0,    # Sin shear
                 'perspective': 0.0, # Sin perspectiva
                 'flipud': 0.0,   # Sin flip vertical
-                'fliplr': 0.5,   # Flip horizontal OK
+                'fliplr': 0.5,   # Flip horizontal 
                 'copy_paste': 0.0, # Sin copy-paste
                 'auto_augment': 'randaugment', # Augmentación automática
                 'erasing': 0.4,  # Random erasing probability
@@ -118,38 +113,32 @@ class ConservativeFinalTraining:
         print(f"Configuración: Conservative (rank #1)")
         print("="*60)
         
-        # Verificar dataset
         if not Path(dataset_path).exists():
             raise FileNotFoundError(f"Dataset no encontrado: {dataset_path}")
         
-        # Preparar configuración
         train_args, model_weights = self.prepare_conservative_training_config(
             dataset_path, epochs
         )
         
-        # Crear directorio de salida con timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M')
         output_dir = Path(f"conservative_final_{output_name}_{timestamp}")
         output_dir.mkdir(exist_ok=True)
         
-        # Nombre del run
+
         run_name = f"conservative_final_{Path(dataset_path).name}"
         train_args['name'] = run_name
         train_args['project'] = str(output_dir)
         
         try:
-            # Limpiar cache GPU
             torch.cuda.empty_cache()
             
-            # Crear o cargar modelo
             if resume_from and Path(resume_from).exists():
-                print(f"🔄 Reanudando desde: {resume_from}")
+                print(f"Reanudando desde: {resume_from}")
                 model = YOLO(resume_from)
             else:
-                print(f"🆕 Creando YOLOv11m desde: {model_weights}")
+                print(f"Creando YOLOv11m desde: {model_weights}")
                 model = YOLO(model_weights)
             
-            # Mostrar configuración clave
             print(f"\nCONFIGURACIÓN CONSERVATIVE:")
             print(f"   Batch Size: {train_args['batch']}")
             print(f"   Learning Rate: {train_args['lr0']} (conservador)")
@@ -158,51 +147,44 @@ class ConservativeFinalTraining:
             print(f"   Dropout: {train_args['dropout']} (regularización ligera)")
             print(f"   Patience: {train_args['patience']} (early stopping extendido)")
             
-            # Entrenar
-            print(f"\n⚡ Iniciando entrenamiento conservative...")
-            print(f"🎯 Meta: >90% recall en minería ilegal")
+            print(f"\nIniciando entrenamiento conservative...")
+            print(f"Meta: >90% recall en minería ilegal")
             
             results = model.train(**train_args)
             
-            # Cargar mejor modelo
             best_model_path = output_dir / run_name / "weights" / "best.pt"
             if not best_model_path.exists():
                 raise FileNotFoundError(f"Modelo entrenado no encontrado: {best_model_path}")
             
             final_model = YOLO(str(best_model_path))
             
-            # Evaluación final detallada con thresholds optimizados para recall
-            print(f"\n📊 EVALUACIÓN FINAL CON THRESHOLDS OPTIMIZADOS")
+            print(f"\n EVALUACIÓN FINAL CON THRESHOLDS OPTIMIZADOS")
             
-            # Evaluación con threshold bajo para máximo recall
             val_results_recall = final_model.val(
                 data=train_args['data'],
                 imgsz=train_args['imgsz'],
                 batch=train_args['batch'],
-                conf=0.1,          # Threshold muy bajo para recall
-                iou=0.5,           # IoU permisivo
+                conf=0.1,         
+                iou=0.5,           
                 max_det=1000,
                 verbose=True,
                 plots=True,
                 save_json=True
             )
             
-            # Evaluación con threshold normal para comparación
             val_results_normal = final_model.val(
                 data=train_args['data'],
                 imgsz=train_args['imgsz'],
                 batch=train_args['batch'],
-                conf=0.25,         # Threshold normal
-                iou=0.7,           # IoU estándar
+                conf=0.25,        
+                iou=0.7,           
                 max_det=300,
                 verbose=False
             )
             
-            # Extraer métricas
             mining_metrics_recall = self.extract_mining_metrics(val_results_recall, "optimizado_recall")
             mining_metrics_normal = self.extract_mining_metrics(val_results_normal, "normal")
             
-            # Comparar con resultado original (86.25%)
             baseline_recall = 0.8625
             improvement = mining_metrics_recall['recall'] - baseline_recall
             
@@ -230,7 +212,6 @@ class ConservativeFinalTraining:
             else:
                 print(f"   Por debajo del baseline, considera más entrenamiento")
             
-            # Guardar métricas completas
             all_metrics = {
                 'config_used': self.best_config,
                 'dataset': dataset_path,
@@ -246,12 +227,10 @@ class ConservativeFinalTraining:
                 'recommendations': self.generate_recommendations(mining_metrics_recall)
             }
             
-            # Guardar resultados
             metrics_file = output_dir / "conservative_mining_metrics.json"
             with open(metrics_file, 'w') as f:
                 json.dump(all_metrics, f, indent=2)
             
-            # Copiar modelo final con nombre descriptivo
             final_model_path = output_dir / f"conservative_mining_detector_recall_{mining_metrics_recall['recall']:.3f}.pt"
             import shutil
             shutil.copy2(best_model_path, final_model_path)
@@ -277,7 +256,6 @@ class ConservativeFinalTraining:
             per_class_precision = val_results.box.p
             per_class_ap50 = val_results.box.ap50
             
-            # Métricas de minería ilegal (clase 4)
             if len(per_class_recall) > 4:
                 return {
                     'eval_type': eval_type,
@@ -302,24 +280,23 @@ class ConservativeFinalTraining:
         precision = metrics['precision']
         
         if recall >= 0.95:
-            recommendations.append("🏆 Excelente recall! Modelo listo para producción")
+            recommendations.append("Excelente recall!")
         elif recall >= 0.90:
-            recommendations.append("✅ Muy buen recall! Considera ajustar threshold para balance recall/precision")
+            recommendations.append("Muy buen recall! ")
         elif recall >= 0.85:
-            recommendations.append("🎯 Buen recall. Considera entrenamiento adicional o threshold más bajo")
+            recommendations.append("Buen recall. ")
         else:
-            recommendations.append("⚠️ Recall bajo. Considera más datos o técnicas de data augmentation")
+            recommendations.append("Recall bajo.")
         
         if precision < 0.5:
-            recommendations.append("📊 Precision baja. Considera threshold más alto en producción")
+            recommendations.append("Precision baja")
         elif precision < 0.7:
-            recommendations.append("📈 Precision moderada. Balance aceptable para detección de minería")
+            recommendations.append("Precision moderada")
         else:
-            recommendations.append("🎯 Excelente precision. Buen balance recall/precision")
+            recommendations.append("Excelente precision")
         
         return recommendations
 
-# Funciones de uso fácil
 def train_conservative_mining_detector(dataset_path: str = "preprocesamiento/modelo_yolov11_dataset_completo_preprocesado",
                                       epochs: int = 100,
                                       resume_from: str = None):
@@ -336,14 +313,11 @@ def train_conservative_mining_detector(dataset_path: str = "preprocesamiento/mod
     print("📊 Basado en la configuración ganadora (86.25% recall)")
     print("="*60)
     
-    # Crear trainer
     trainer = ConservativeFinalTraining()
     
-    # Verificar dataset
     if not Path(dataset_path).exists():
-        print(f"❌Dataset no encontrado: {dataset_path}")
+        print(f"Dataset no encontrado: {dataset_path}")
         
-        # Ofrecer alternativa
         alt_path = "modelo_yolov11_dataset_completo"
         if Path(alt_path).exists():
             response = input(f"¿Usar dataset original ({alt_path})? [y/N]: ")
@@ -355,7 +329,6 @@ def train_conservative_mining_detector(dataset_path: str = "preprocesamiento/mod
             print(" Ningún dataset encontrado")
             return None, None
     
-    # Entrenar
     try:
         final_model, metrics = trainer.train_conservative_model(
             dataset_path=dataset_path,
@@ -367,13 +340,12 @@ def train_conservative_mining_detector(dataset_path: str = "preprocesamiento/mod
         return final_model, metrics
         
     except KeyboardInterrupt:
-        print("\n⏹ Entrenamiento interrumpido por el usuario")
+        print("\nEntrenamiento interrumpido por el usuario")
         return None, None
     except Exception as e:
-        print(f"\n❌Error: {str(e)}")
+        print(f"\nError: {str(e)}")
         return None, None
 
-# Función de análisis post-entrenamiento
 def analyze_conservative_results(metrics_file: str):
     """Analiza los resultados del entrenamiento conservative"""
     
@@ -384,32 +356,31 @@ def analyze_conservative_results(metrics_file: str):
     with open(metrics_file, 'r') as f:
         metrics = json.load(f)
     
-    print("📊 ANÁLISIS DE RESULTADOS CONSERVATIVE")
+    print("ANÁLISIS DE RESULTADOS CONSERVATIVE")
     print("="*50)
     
     recall_opt = metrics['recall_optimized']
     normal = metrics['normal_threshold']
     baseline = metrics['baseline_comparison']
     
-    print(f"🎯 RENDIMIENTO FINAL:")
+    print(f"RENDIMIENTO FINAL:")
     print(f"   Mejor Recall: {recall_opt['recall']:.4f} ({recall_opt['recall']*100:.1f}%)")
     print(f"   Precision: {recall_opt['precision']:.4f}")
     print(f"   Mejora vs Baseline: {baseline['improvement']:+.4f}")
     
-    print(f"\n💡 RECOMENDACIONES:")
+    print(f"\nResultados:")
     for rec in metrics['recommendations']:
         print(f"   {rec}")
 
 if __name__ == "__main__":
-    # Ejecutar entrenamiento conservative
-    print("🚀 Iniciando entrenamiento con configuración conservative ganadora...")
+    print("Iniciando entrenamiento con configuración conservative de busqueda hiperparametros...")
     
     final_model, metrics = train_conservative_mining_detector(
-        epochs=100,  # Cambiar según necesites
-        resume_from=None  # O ruta a modelo para resumir
+        epochs=100,  
+        resume_from=None  
     )
     
     if metrics:
-        print(f"\n🎉 ¡Entrenamiento completado!")
+        print(f"¡Entrenamiento completado!")
         recall = metrics['recall_optimized']['recall']
-        print(f"🎯 Recall final: {recall:.4f} ({recall*100:.1f}%)")
+        print(f"Recall final: {recall:.4f} ({recall*100:.1f}%)")

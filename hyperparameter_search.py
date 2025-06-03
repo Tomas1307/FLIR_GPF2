@@ -11,7 +11,7 @@ import yaml
 class HyperparameterSearchRecall:
     def __init__(self, 
                  dataset_paths: list,
-                 target_class: int = 4,  # Clase de minería ilegal
+                 target_class: int = 4, 
                  base_epochs: int = 250,
                  gpu_memory_gb: int = 24):
         
@@ -21,7 +21,6 @@ class HyperparameterSearchRecall:
         self.gpu_memory = gpu_memory_gb
         self.results = []
         
-        # Directorio para guardar resultados
         self.output_dir = Path(f"hyperparameter_search_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         self.output_dir.mkdir(exist_ok=True)
         
@@ -34,8 +33,7 @@ class HyperparameterSearchRecall:
     def get_hyperparameter_combinations(self):
         """Define las combinaciones de hiperparámetros a evaluar"""
         
-        # 🎯 CONFIGURACIONES ESPECÍFICAS PARA MINERÍA ILEGAL
-        # Basadas en tu problema específico con 4000+ imágenes aumentadas
+
         
         mining_optimized_configs = [
             # Config 1: Ultra Recall - Máximo recall para minería
@@ -87,26 +85,20 @@ class HyperparameterSearchRecall:
             #},
         ]
         
-        # Añadir variaciones de las mejores configuraciones
         #variations = []
         
-        # Variaciones de la configuración ultra_recall
         #base_ultra = mining_optimized_configs[0].copy()
         
-        # Variación con batch size mayor
         #var1 = base_ultra.copy()
         #var1.update({'batch_size': 48, 'name': 'ultra_recall_batch64'})
         #variations.append(var1)
         
-        # Variación con learning rate más conservador
         #var2 = base_ultra.copy()
         #var2.update({'lr0': 0.015, 'name': 'ultra_recall_lr_conservative'})
         #variations.append(var2)
         
-        # Variaciones de high_resolution
         #base_hires = mining_optimized_configs[1].copy()
         
-        # High res con modelo medium (menos memoria)
         #var3 = base_hires.copy()
         #var3.update({'model_size': 'yolo11m.pt', 'batch_size': 40, 'name': 'high_res_medium'})
         #variations.append(var3)
@@ -114,10 +106,9 @@ class HyperparameterSearchRecall:
         # Combinar todas las configuraciones
         all_configs = mining_optimized_configs 
         
-        print(f"🧪 Configuraciones específicas para minería ilegal: {len(all_configs)}")
-        print("🎯 Enfocadas en maximizar recall de clase 4")
+        print(f"Configuraciones específicas para minería ilegal: {len(all_configs)}")
+        print("Enfocadas en maximizar recall de clase 4")
         
-        # Mostrar resumen de configuraciones
         for i, config in enumerate(all_configs):
             print(f"   {i+1}. {config['name']}: Batch={config['batch_size']}, "
                   f"LR={config['lr0']}, Img={config['imgsz']}, Model={config['model_size']}")
@@ -131,7 +122,6 @@ class HyperparameterSearchRecall:
             'yolo11l.pt': 6.0   # GB base
         }
         
-        # Factor por batch size e imagen
         memory_per_batch = batch_size * (imgsz / 640) ** 2 * 0.1
         total_memory = base_memory[model_size] + memory_per_batch
         
@@ -140,33 +130,28 @@ class HyperparameterSearchRecall:
     def train_single_config(self, config, dataset_path, run_id):
         """Entrena un modelo con una configuración específica"""
         
-        # Verificar memoria
         estimated_memory = self.estimate_memory_usage(
             config['batch_size'], config['imgsz'], config['model_size']
         )
         
         if estimated_memory > self.gpu_memory * 0.9:
-            print(f"⚠️ Config {run_id}: Memoria estimada {estimated_memory:.1f}GB > {self.gpu_memory*0.9:.1f}GB")
+            print(f"Config {run_id}: Memoria estimada {estimated_memory:.1f}GB > {self.gpu_memory*0.9:.1f}GB")
             return None
         
         try:
-            print(f"\n🚀 Entrenando configuración {run_id}:")
+            print(f"\nEntrenando configuración {run_id}:")
             print(f"   Dataset: {Path(dataset_path).name}")
             print(f"   Batch: {config['batch_size']}, LR: {config['lr0']}, Img: {config['imgsz']}")
             print(f"   Modelo: {config['model_size']}")
             
-            # Limpiar cache GPU
             torch.cuda.empty_cache()
             
-            # Crear modelo
             model = YOLO(config['model_size'])
             
-            # Preparar argumentos de entrenamiento
             yaml_path = Path(dataset_path) / "dataset.yaml"
             config_name = config.get('name', f'config_{run_id}')
             run_name = f"hp_search_{run_id}_{config_name}_{Path(dataset_path).name}"
             
-            # Argumentos específicos para minería ilegal
             train_args = {
                 'data': str(yaml_path),
                 'epochs': self.base_epochs,
@@ -179,14 +164,13 @@ class HyperparameterSearchRecall:
                 'dropout': config['dropout'],
                 'mosaic': config['mosaic'],
                 'mixup': config['mixup'],
-                'patience': 5,  # Early stopping
-                'save_period': -1,  # No guardar checkpoints intermedios
+                'patience': 5,  
+                'save_period': -1, 
                 'name': run_name,
                 'exist_ok': True,
                 'verbose': False,
                 'workers': 8,
                 
-                # 🎯 CONFIGURACIONES ESPECÍFICAS PARA RECALL DE MINERÍA
                 'conf': 0.15,        # Confidence threshold bajo para detectar más
                 'iou': 0.6,          # IoU threshold más permisivo  
                 'max_det': 500,      # Más detecciones por imagen
@@ -197,7 +181,6 @@ class HyperparameterSearchRecall:
                 'mask_ratio': 4,       # Mask downsampling ratio
                 'boxes': True,         # Train bounding boxes
                 
-                # Optimizaciones de pérdida para clase desbalanceada
                 'cls': 0.5,      # Classification loss weight
                 'box': 7.5,      # Box loss weight (alto para buena localización)
                 'dfl': 1.5,      # Distribution focal loss weight
@@ -205,7 +188,6 @@ class HyperparameterSearchRecall:
                 'kobj': 1.0,     # Keypoint obj loss weight
                 'label_smoothing': 0.0,  # Sin smoothing para preservar clase rara
                 
-                # Augmentaciones específicas para minería
                 'hsv_h': 0.015,  # Hue augmentation (ligero)
                 'hsv_s': 0.7,    # Saturation augmentation
                 'hsv_v': 0.4,    # Value augmentation
@@ -222,22 +204,17 @@ class HyperparameterSearchRecall:
                 'crop_fraction': 1.0, # Crop fraction
             }
             
-            # Entrenar
             start_time = time.time()
             results = model.train(**train_args)
             training_time = time.time() - start_time
             
-            # Evaluar en validation set
             val_results = model.val(data=str(yaml_path), verbose=False)
             
-            # Extraer métricas específicas de la clase objetivo
             if hasattr(val_results, 'box') and val_results.box is not None:
-                # Métricas por clase
                 per_class_recall = val_results.box.r  # Recall por clase
                 per_class_precision = val_results.box.p  # Precision por clase
                 per_class_ap50 = val_results.box.ap50  # AP@0.5 por clase
                 
-                # Métricas de la clase objetivo (minería ilegal)
                 if len(per_class_recall) > self.target_class:
                     target_recall = per_class_recall[self.target_class]
                     target_precision = per_class_precision[self.target_class]
@@ -245,7 +222,6 @@ class HyperparameterSearchRecall:
                 else:
                     target_recall = target_precision = target_ap50 = 0.0
                 
-                # Métricas generales
                 overall_map50 = val_results.box.map50
                 overall_map = val_results.box.map
                 
@@ -269,14 +245,14 @@ class HyperparameterSearchRecall:
                 'gpu_memory_estimated': estimated_memory
             }
             
-            print(f"   ✅ {config_name}: Recall clase {self.target_class}: {target_recall:.4f}")
-            print(f"   📊 Precision: {target_precision:.4f}, mAP@50: {overall_map50:.4f}")
-            print(f"   ⏱️ Tiempo: {training_time/60:.1f} min, 💾 GPU: {estimated_memory:.1f}GB")
+            print(f"   {config_name}: Recall clase {self.target_class}: {target_recall:.4f}")
+            print(f"   Precision: {target_precision:.4f}, mAP@50: {overall_map50:.4f}")
+            print(f"   Tiempo: {training_time/60:.1f} min, GPU: {estimated_memory:.1f}GB")
             
             return result
             
         except Exception as e:
-            print(f"   ❌ Error: {str(e)}")
+            print(f"   Error: {str(e)}")
             return {
                 'run_id': run_id,
                 'dataset': Path(dataset_path).name,
@@ -286,7 +262,6 @@ class HyperparameterSearchRecall:
             }
         
         finally:
-            # Limpiar memoria
             torch.cuda.empty_cache()
 
     def run_search(self):
@@ -295,7 +270,7 @@ class HyperparameterSearchRecall:
         configurations = self.get_hyperparameter_combinations()
         total_runs = len(configurations) * len(self.dataset_paths)
         
-        print(f"\n🎯 INICIANDO BÚSQUEDA DE HIPERPARÁMETROS")
+        print(f"\nINICIANDO BÚSQUEDA DE HIPERPARÁMETROS")
         print(f"   Total de experimentos: {total_runs}")
         print(f"   Tiempo estimado: {total_runs * 15:.0f} minutos")
         print("="*60)
@@ -304,7 +279,7 @@ class HyperparameterSearchRecall:
         all_results = []
         
         for dataset_path in self.dataset_paths:
-            print(f"\n📁 Dataset: {Path(dataset_path).name}")
+            print(f"\n Dataset: {Path(dataset_path).name}")
             
             for config in configurations:
                 run_id += 1
@@ -313,10 +288,8 @@ class HyperparameterSearchRecall:
                 if result:
                     all_results.append(result)
                     
-                    # Guardar resultados parciales
                     self.save_partial_results(all_results)
                 
-                # Breve pausa para la GPU
                 time.sleep(2)
         
         self.results = all_results
@@ -337,96 +310,85 @@ class HyperparameterSearchRecall:
         
         df = pd.DataFrame(self.results)
         
-        # Filtrar errores
         valid_results = df[df['target_class_recall'] > 0].copy()
         
         if len(valid_results) == 0:
-            print("❌ No hay resultados válidos")
+            print(" No hay resultados válidos")
             return
         
-        # Ordenar por recall de clase objetivo
         valid_results = valid_results.sort_values('target_class_recall', ascending=False)
         
-        print(f"\n🏆 TOP 5 CONFIGURACIONES POR RECALL CLASE {self.target_class} (MINERÍA ILEGAL):")
+        print(f"\nTOP 5 CONFIGURACIONES POR RECALL CLASE {self.target_class} (MINERÍA ILEGAL):")
         print("="*90)
         
         for i, (_, row) in enumerate(valid_results.head(5).iterrows()):
             config_name = row.get('config_name', f"Run {row['run_id']}")
-            print(f"\n🥇 #{i+1} - {config_name} ({row['dataset']})")
-            print(f"   🎯 Recall Minería: {row['target_class_recall']:.4f}")
-            print(f"   📊 Precision: {row['target_class_precision']:.4f}")
-            print(f"   📈 AP@50 Minería: {row['target_class_ap50']:.4f}")
-            print(f"   🌟 mAP@50 General: {row['overall_map50']:.4f}")
+            print(f"\n #{i+1} - {config_name} ({row['dataset']})")
+            print(f"    Recall Minería: {row['target_class_recall']:.4f}")
+            print(f"    Precision: {row['target_class_precision']:.4f}")
+            print(f"    AP@50 Minería: {row['target_class_ap50']:.4f}")
+            print(f"    mAP@50 General: {row['overall_map50']:.4f}")
             
-            # Mostrar configuración clave
             if isinstance(row['config'], dict):
                 config = row['config']
-                print(f"   ⚙️ Config: Batch={config.get('batch_size', 'N/A')}, "
+                print(f"    Config: Batch={config.get('batch_size', 'N/A')}, "
                       f"LR={config.get('lr0', 'N/A')}, "
                       f"Img={config.get('imgsz', 'N/A')}, "
                       f"Model={config.get('model_size', 'N/A')}")
-                print(f"   🔧 Augment: Mosaic={config.get('mosaic', 'N/A')}, "
+                print(f"    Augment: Mosaic={config.get('mosaic', 'N/A')}, "
                       f"Mixup={config.get('mixup', 'N/A')}, "
                       f"Dropout={config.get('dropout', 'N/A')}")
             
-            print(f"   🕒 Tiempo: {row['training_time_minutes']:.1f} min")
-            print(f"   💾 GPU estimada: {row.get('gpu_memory_estimated', 'N/A')} GB")
+            print(f"   Tiempo: {row['training_time_minutes']:.1f} min")
+            print(f"   GPU estimada: {row.get('gpu_memory_estimated', 'N/A')} GB")
         
-        # Análisis específico para minería ilegal
         mining_recalls = valid_results['target_class_recall']
-        print(f"\n📊 ESTADÍSTICAS DE RECALL PARA MINERÍA ILEGAL:")
-        print(f"   🎯 Mejor recall: {mining_recalls.max():.4f}")
-        print(f"   📈 Recall promedio: {mining_recalls.mean():.4f}")
-        print(f"   📉 Recall mínimo: {mining_recalls.min():.4f}")
-        print(f"   🎪 Configuraciones > 0.8 recall: {len(mining_recalls[mining_recalls > 0.8])}")
-        print(f"   🔥 Configuraciones > 0.9 recall: {len(mining_recalls[mining_recalls > 0.9])}")
+        print(f"\n ESTADÍSTICAS DE RECALL PARA MINERÍA ILEGAL:")
+        print(f"    Mejor recall: {mining_recalls.max():.4f}")
+        print(f"    Recall promedio: {mining_recalls.mean():.4f}")
+        print(f"    Recall mínimo: {mining_recalls.min():.4f}")
+        print(f"    Configuraciones > 0.8 recall: {len(mining_recalls[mining_recalls > 0.8])}")
+        print(f"    Configuraciones > 0.9 recall: {len(mining_recalls[mining_recalls > 0.9])}")
         
         # Análisis por dataset
-        print(f"\n📁 ANÁLISIS POR DATASET:")
+        print(f"\n ANÁLISIS POR DATASET:")
         for dataset in valid_results['dataset'].unique():
             subset = valid_results[valid_results['dataset'] == dataset]
             best_recall = subset['target_class_recall'].max()
             avg_recall = subset['target_class_recall'].mean()
             best_config = subset.loc[subset['target_class_recall'].idxmax(), 'config_name']
             
-            print(f"   📂 {dataset}:")
-            print(f"      🏆 Mejor: {best_recall:.4f} ({best_config})")
-            print(f"      📊 Promedio: {avg_recall:.4f}")
-            print(f"      🧪 Experimentos: {len(subset)}")
+            print(f"    {dataset}:")
+            print(f"       Mejor: {best_recall:.4f} ({best_config})")
+            print(f"       Promedio: {avg_recall:.4f}")
+            print(f"       Experimentos: {len(subset)}")
         
-        # Recomendaciones
         best_overall = valid_results.iloc[0]
         print(f"\n💡 RECOMENDACIONES:")
         
         if best_overall['target_class_recall'] >= 0.9:
-            print(f"   ✅ ¡EXCELENTE! Recall de {best_overall['target_class_recall']:.4f} alcanzado")
-            print(f"   🚀 Usar configuración: {best_overall.get('config_name', 'N/A')}")
-            print(f"   📁 Con dataset: {best_overall['dataset']}")
+            print(f"   ¡EXCELENTE! Recall de {best_overall['target_class_recall']:.4f} alcanzado")
+            print(f"   Usar configuración: {best_overall.get('config_name', 'N/A')}")
+            print(f"   Con dataset: {best_overall['dataset']}")
         elif best_overall['target_class_recall'] >= 0.8:
-            print(f"   ✅ BUENO. Recall de {best_overall['target_class_recall']:.4f}")
-            print(f"   🔧 Considera entrenamiento más largo (250+ épocas)")
-            print(f"   🎯 O ajustar threshold de confianza en inferencia")
+            print(f"   BUENO. Recall de {best_overall['target_class_recall']:.4f}")
         else:
-            print(f"   ⚠️ Recall bajo: {best_overall['target_class_recall']:.4f}")
-            print(f"   🔄 Considera más data augmentation")
-            print(f"   📈 O threshold de confianza más bajo (0.1-0.15)")
-        
-        
-        print(f"\n✅ Resultados guardados en: {self.output_dir}")
+            print(f"   Recall bajo: {best_overall['target_class_recall']:.4f}")
 
-# Función de uso fácil
+        
+        
+        print(f"\n Resultados guardados en: {self.output_dir}")
+
 def search_hyperparameters_for_recall():
     """Función principal para ejecutar la búsqueda"""
     
-    # Rutas de tus datasets
     datasets = [
     "preprocesamiento/modelo_yolov11_dataset_completo_preprocesado"
     ]
     
-    # Crear y ejecutar búsqueda
     searcher = HyperparameterSearchRecall(
         dataset_paths=datasets,
-        target_class=4,  # Clase de minería ilegal
+        target_class=4,  
         base_epochs=100,
         gpu_memory_gb=24
     )
@@ -435,7 +397,6 @@ def search_hyperparameters_for_recall():
     
     return searcher, results
 
-# Ejecutar búsqueda
 if __name__ == "__main__":
     searcher, results = search_hyperparameters_for_recall()
-    print("\n🎉 Búsqueda completada!")
+    print("\n Búsqueda completada!")
