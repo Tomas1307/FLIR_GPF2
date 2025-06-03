@@ -24,11 +24,11 @@ class HyperparameterSearchRecall:
         self.output_dir = Path(f"hyperparameter_search_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         self.output_dir.mkdir(exist_ok=True)
         
-        print(f"🔍 Búsqueda de hiperparámetros iniciada")
-        print(f"🎯 Objetivo: Maximizar recall de clase {target_class} (minería ilegal)")
-        print(f"📊 Datasets: {len(dataset_paths)}")
-        print(f"⚡ GPU: {gpu_memory_gb}GB disponibles")
-        print(f"📁 Resultados en: {self.output_dir}")
+        print(f" Búsqueda de hiperparámetros iniciada")
+        print(f" Objetivo: Maximizar recall de clase {target_class} (minería ilegal)")
+        print(f" Datasets: {len(dataset_paths)}")
+        print(f" GPU: {gpu_memory_gb}GB disponibles")
+        print(f" Resultados en: {self.output_dir}")
 
     def get_hyperparameter_combinations(self):
         """Define las combinaciones de hiperparámetros a evaluar"""
@@ -76,7 +76,7 @@ class HyperparameterSearchRecall:
             #    'name': 'large_aggressive'
             #},
             
-            # Config 6: Tu configuración base mejorada
+            # Config 6: Configuración base mejorada
             #{
             #    'batch_size': 32, 'lr0': 0.01, 'lrf': 0.01, 'cos_lr': True,
             #    'weight_decay': 0.001, 'dropout': 0.1, 'mosaic': 0.8, 
@@ -103,7 +103,6 @@ class HyperparameterSearchRecall:
         #var3.update({'model_size': 'yolo11m.pt', 'batch_size': 40, 'name': 'high_res_medium'})
         #variations.append(var3)
         
-        # Combinar todas las configuraciones
         all_configs = mining_optimized_configs 
         
         print(f"Configuraciones específicas para minería ilegal: {len(all_configs)}")

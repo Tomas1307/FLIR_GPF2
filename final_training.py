@@ -309,8 +309,8 @@ def train_conservative_mining_detector(dataset_path: str = "preprocesamiento/mod
         resume_from: Ruta a modelo para resumir entrenamiento
     """
     
-    print("🏆 ENTRENADOR CONSERVATIVE DE MINERÍA ILEGAL")
-    print("📊 Basado en la configuración ganadora (86.25% recall)")
+    print("ENTRENADOR CONSERVATIVE DE MINERÍA ILEGAL")
+    print("Basado en la configuración ganadora (86.25% recall)")
     print("="*60)
     
     trainer = ConservativeFinalTraining()
