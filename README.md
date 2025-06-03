@@ -1,195 +1,190 @@
 # Detección de Campamentos de Minería Ilegal en Videos de Cámaras FLIR
 
-Este proyecto propone un modelo basado en YOLO para la detección de campamentos de minería ilegal en videos aéreos capturados con cámaras FLIR. El objetivo principal es comparar el rendimiento de modelos entrenados con y sin preprocesamiento de imágenes, buscando optimizar la detección en condiciones desafiantes como la presencia de nubes.
+Este proyecto propone un modelo basado en YOLOv11 para la detección de campamentos de minería ilegal en videos aéreos capturados con cámaras FLIR. El objetivo principal es maximizar el recall para la detección de zonas de minería ilegal mediante búsqueda exhaustiva de hiperparámetros y estrategias de preprocesamiento optimizadas.
 
-## 📊 Resultados Destacados
+## Tablero
 
-- **Mejora del 5%** en métricas clave con preprocesamiento CLAHE
-- **Recall: 0.926** para detección de zonas de minería ilegal (Modelo ID 18)
-- **mAP@0.5: 0.959** en el mejor modelo general (Modelo ID 15)
-- **Validación cruzada (K=5)** para garantizar robustez del modelo
-- **Dataset expandido** a 11,658 imágenes mediante técnicas de aumentación
+http://20.42.84.158:8050/
 
-## 👥 Autores
+## Resultados Destacados
 
-* **Tomas Acosta**
-    Ingeniería de Sistemas y Computación
-    Universidad de los Andes, Bogotá, Colombia
+- **Recall: 80.3%** para detección de zonas de minería ilegal (Configuración Conservative)
+- **Precision: 86.5%** para zonas de minería ilegal
+- **mAP@50: 93.4%** promedio general en todas las clases
+- **Configuración Conservative** como ganadora tras búsqueda exhaustiva de hiperparámetros
+- **8 experimentos** comparativos (4 configuraciones × 2 datasets)
+- **Dataset preprocesado** demostró superioridad consistente (-4.2% promedio en dataset original)
+- **Fine-tuning eficiente** con 15 épocas de entrenamiento
+- **Umbral de confianza optimizado** (0.15) para maximizar detección crítica
+
+## Autores
+
+* **Tomas Acosta**  
+    Ingeniería de Sistemas y Computación  
+    Universidad de los Andes, Bogotá, Colombia  
     t.acosta@uniandes.edu.co
 
-* **Juan Andrés Carrasquilla**
-    Ingeniería de Sistemas y Computación
-    Universidad de los Andes, Bogotá, Colombia
+* **Juan Andrés Carrasquilla**  
+    Ingeniería de Sistemas y Computación  
+    Universidad de los Andes, Bogotá, Colombia  
     j.carrasquillag@uniandes.edu.co
 
-* **Samuel Romero**
-    Ingeniería de Sistemas y Computación
-    Universidad de los Andes, Bogotá, Colombia
+* **Samuel Romero**  
+    Ingeniería de Sistemas y Computación  
+    Universidad de los Andes, Bogotá, Colombia  
     sj.romero10@uniandes.edu.co
 
-## 📋 Resumen
+## Resumen
 
-La minería ilegal en la Amazonía colombiana representa una amenaza crítica para la biodiversidad y los recursos hídricos. Este trabajo aborda este problema desarrollando un modelo de detección de objetos para identificar campamentos de minería ilegal en videos aéreos. La metodología incluye:
+La minería ilegal en la Amazonía colombiana representa una amenaza crítica para la biodiversidad y los recursos hídricos. Este trabajo aborda este problema desarrollando un modelo de detección de objetos optimizado para identificar campamentos de minería ilegal en videos aéreos. La metodología incluye:
 
-1.  **Aumentación de datos:** Se aplicaron técnicas como `HorizontalFlip` y `MotionBlur` para expandir el dataset a 11,658 imágenes.
-2.  **Preprocesamiento de imágenes:** Se implementaron filtros como el filtro mediano y CLAHE (Contrast Limited Adaptive Histogram Equalization) para mejorar la calidad visual de las imágenes.
-3.  **Validación cruzada ($K=5$):** Se realizaron entrenamientos comparativos en dos variantes: con imágenes crudas y con imágenes preprocesadas.
+1. **Búsqueda exhaustiva de hiperparámetros:** Se evaluaron 4 configuraciones especializadas (Ultra Recall, High Resolution, Balanced, Conservative) en 2 versiones del dataset.
+2. **Augmentación híbrida:** Combinación de augmentación offline (Albumentations) y online (YOLO nativo) para maximizar robustez.
+3. **Preprocesamiento optimizado:** Implementación de filtro mediano y CLAHE para mejorar detección en condiciones adversas.
+4. **Fine-tuning estratégico:** Transfer learning eficiente desde YOLOv11 pre-entrenado en COCO.
 
-Los resultados demuestran que el preprocesamiento de imágenes, especialmente el uso de CLAHE, mejora significativamente las métricas clave (recall: 0.926, mAP@0.5: 0.959) en un 5% en comparación con los modelos sin preprocesamiento. Esto es particularmente notable en zonas nubosas, lo que optimiza la detección de patrones críticos sin generar sobreajuste.
+Los resultados demuestran que la **configuración Conservative** con dataset preprocesado logra el mejor balance entre recall (80.3%) y estabilidad, superando enfoques más agresivos. La estrategia de umbral de confianza bajo (0.15) se justifica por la criticidad de minimizar falsos negativos en detección de minería ilegal.
 
-## 🎯 Objetivos del Proyecto
+## Objetivos del Proyecto
 
 ### Objetivo Principal
-Desarrollar un sistema automatizado de detección de campamentos de minería ilegal en imágenes aéreas FLIR que maximice el recall (sensibilidad) para minimizar falsos negativos.
+Desarrollar un sistema automatizado de detección de campamentos de minería ilegal que maximice el recall para minimizar falsos negativos, implementando búsqueda sistemática de hiperparámetros para optimización del rendimiento.
 
 ### Objetivos Específicos
-- Comparar el rendimiento de modelos YOLO con y sin preprocesamiento de imágenes
-- Evaluar el impacto de técnicas como CLAHE en la detección de patrones críticos
-- Implementar un sistema robusto para vigilancia ambiental en tiempo real
-- Establecer un marco replicable para análisis ambiental basado en visión artificial
+- Comparar sistemáticamente 4 configuraciones de entrenamiento especializadas
+- Evaluar el impacto del preprocesamiento (CLAHE + filtro mediano) vs dataset original
+- Optimizar hiperparámetros específicamente para la clase crítica (minería ilegal)
+- Validar estrategias de augmentación híbrida para clases minoritarias
+- Establecer marco metodológico replicable para detección de actividades ilegales
 
-## 🔬 Metodología
+## Metodología
 
-El proyecto sigue una metodología rigurosa para la detección de campamentos de minería ilegal, que se puede desglosar en las siguientes etapas:
+### 1. Búsqueda de Hiperparámetros
 
-### 1. Recopilación y Aumentación de Datos
+Se diseñaron **4 configuraciones especializadas**, cada una probada en 2 versiones del dataset:
 
-* Se utilizó un dataset de videos capturados con cámaras FLIR.
-* Para aumentar la robustez y la capacidad de generalización del modelo, se aplicaron técnicas de aumentación de datos:
-    * **`HorizontalFlip`**: Inversión horizontal de las imágenes.
-    * **`MotionBlur`**: Simulación de desenfoque por movimiento.
-    * **`RandomBrightness`**: Modificación aleatoria del nivel de brillo.
-    * **`RandomGamma`**: Ajuste del contraste no lineal.
-* Gracias a estas técnicas, el dataset se expandió a un total de 11,658 imágenes.
+**Configuraciones evaluadas:**
+- **Ultra Recall:** LR=0.02, Mosaic=1.0, Mixup=0.15, sin dropout
+- **High Resolution:** 832px, modelo yolo11l.pt para mayor capacidad
+- **Balanced:** LR=0.01, Mosaic=0.85, Mixup=0.05, enfoque equilibrado
+- **Conservative:** LR=0.005, Mosaic=0.8, sin mixup, dropout=0.1 (GANADOR)
 
-### 2. Clases del Dataset
+**Total: 8 experimentos** (4 configuraciones × 2 datasets)
 
-Se definieron **6 clases** principales para el análisis:
+### 2. Datasets Comparados
 
-| Clase | Descripción | Ejemplos |
-|-------|-------------|----------|
-| -1 | Background (Fondo) | Imágenes sin objetos de interés |
-| 0 | Vehículos | Maquinaria pesada, camiones, excavadoras |
-| 1 | Bodegas | Estructuras de almacenamiento |
-| 2 | Caminos | Vías no pavimentadas en entorno selvático |
-| 3 | Ríos | Cuerpos de agua delimitados |
-| 4 | Zonas de minería ilegal | Áreas con intervención evidente por maquinaria |
+| Dataset | Descripción | Preprocesamiento |
+|---------|-------------|------------------|
+| `modelo_yolov11_dataset_completo` | Dataset original sin procesar | Ninguno |
+| `modelo_yolov11_dataset_completo_preprocesado` | Dataset optimizado | CLAHE + Filtro mediano |
 
-### 3. Preprocesamiento de Imágenes
+### 3. Estrategia de Augmentación Híbrida
 
-Se exploraron y aplicaron técnicas de preprocesamiento para mejorar la visibilidad de los campamentos en las imágenes térmicas:
+**Augmentación offline (Albumentations):**
+- HorizontalFlip, MotionBlur, RandomBrightness, RandomGamma
+- Expansión de clase minoritaria: 91 → 4000 imágenes de minería
 
-* **Filtro Mediano:** Para reducir el ruido de tipo sal y pimienta en las imágenes.
-* **CLAHE (Contrast Limited Adaptive Histogram Equalization):** Para mejorar el contraste local de las imágenes, lo cual es crucial para resaltar características en entornos con poca visibilidad o con presencia de nubes.
+**Augmentación online (YOLO nativo):**
+- Mosaic (0.8): Combinación de 4 imágenes para contexto diverso
+- HSV augmentation: Hue (0.015), Saturation (0.7), Value (0.4)
+- Geometric transforms: Scale (0.5), Translate (0.1)
+- Random Erasing (0.4): Oclusión simulada
+- **Mixup desactivado (0.0):** Preserva características específicas de minería
 
-### 4. Modelo de Detección de Objetos
+### 4. Clases del Dataset
 
-* Se utilizó la arquitectura **YOLO (You Only Look Once)**, específicamente **YOLOv11**, un modelo de detección de objetos en tiempo real conocido por su eficiencia y precisión.
-* Se realizaron entrenamientos comparativos:
-    * **Modelo sin preprocesamiento:** Entrenado directamente con las imágenes crudas.
-    * **Modelo con preprocesamiento:** Entrenado con las imágenes a las que se les aplicó el filtro mediano y CLAHE.
+Se definieron **5 clases** principales para el análisis:
 
-### 5. Evaluación y Validación
+| Clase | Descripción | Distribución |
+|-------|-------------|--------------|
+| 0 | Vehículos | 22 imágenes, 23 instancias |
+| 1 | Bodegas/Construcciones | 249 imágenes, 897 instancias |
+| 2 | Caminos | 245 imágenes, 400 instancias |
+| 3 | Ríos | 114 imágenes, 169 instancias |
+| 4 | Zonas de minería ilegal | 65 imágenes, 80 instancias |
 
-* Se empleó una estrategia de **validación cruzada ($K=5$)** para evaluar el rendimiento de los modelos de manera robusta y evitar el sobreajuste.
-* Se entrenaron los modelos durante hasta 150 épocas para asegurar la convergencia y comparar el desempeño.
-* Las métricas clave utilizadas para la evaluación fueron:
-    * **Recall:** Capacidad del modelo para identificar correctamente todos los campamentos de minería ilegal presentes.
-    * **mAP@0.5 (mean Average Precision at IoU 0.5):** Una métrica estándar para la detección de objetos que mide la precisión promedio en una umbral de intersección sobre unión (IoU) de 0.5.
-    * **mAP@0.5:0.95:** Promedio de mAP calculado en diferentes umbrales de IoU.
+### 5. Optimización de Thresholds
 
-## 📈 Resultados
+**Configuración optimizada para recall:**
+- **Confidence threshold: 0.15** (umbral bajo para maximizar detección)
+- **IoU threshold: 0.6** (balance entre duplicados y detecciones válidas)
+- **Justificación:** En minería ilegal, falsos negativos son más costosos que falsos positivos
 
-Los resultados obtenidos demuestran el impacto positivo del preprocesamiento de imágenes:
+## Resultados
 
-### Mejores Modelos Seleccionados
+### Configuración Ganadora: Conservative
 
-#### Modelo ID 15 (Mejor Desempeño General)
-- **Configuración:** Filtrado: Sí, Preprocesamiento: No, Finetuning (freeze=0), 15 épocas
-- **Recall general:** 0.875
-- **mAP@0.5 general:** 0.896
-- **Recall minería ilegal:** 0.868
-- **mAP@0.5 minería ilegal:** 0.956
+**Métricas del modelo Conservative con dataset preprocesado:**
 
-#### Modelo ID 18 (Mejor para Minería Ilegal)
-- **Configuración:** Filtrado: Sí, Preprocesamiento: Sí, Finetuning (freeze=1), 15 épocas
-- **Recall general:** 0.850
-- **mAP@0.5 general:** 0.870
-- **Recall minería ilegal:** 0.926 ⭐
-- **mAP@0.5 minería ilegal:** 0.957
+| Clase | Precision | Recall | mAP@50 | mAP@50-95 |
+|-------|-----------|--------|--------|-----------|
+| **Todas** | **91.4%** | **90.8%** | **93.4%** | **81.5%** |
+| Vehículos | 93.1% | 100.0% | 99.5% | 98.6% |
+| Bodegas | 93.5% | 87.1% | 94.9% | 70.3% |
+| Caminos | 94.7% | 95.5% | 95.8% | 84.8% |
+| Ríos | 89.2% | 91.1% | 92.6% | 79.8% |
+| **Minería ilegal** | **86.5%** | **80.3%** | **84.4%** | **74.0%** |
 
-### Comparación General
-* **Modelos con preprocesamiento (CLAHE):**
-    * **Recall:** 0.926
-    * **mAP@0.5:** 0.959
-* **Modelos sin preprocesamiento:**
-    * Las métricas fueron aproximadamente un 5% inferiores a las obtenidas con el preprocesamiento.
+### Comparación entre Configuraciones
 
-Estos hallazgos confirman que las técnicas de preprocesamiento, particularmente CLAHE, optimizan la detección de patrones críticos sin generar sobreajuste, lo que es especialmente beneficioso en la identificación de campamentos de minería ilegal en zonas con cobertura nubosa.
+| Configuración | Recall Minería | Diferencia vs Conservative |
+|---------------|----------------|---------------------------|
+| **Conservative** | **80.3%** | - |
+| Ultra Recall | 77.4% | -2.9% |
+| Balanced | 76.6% | -3.7% |
+| High Resolution | 78.1% | -2.2% |
 
-## 🗂️ Estructura del Proyecto
+### Impacto del Preprocesamiento
+
+- **Dataset preprocesado vs original:** +4.2% promedio en recall
+- **CLAHE + filtro mediano** mejoró consistentemente todas las configuraciones
+- **Especialmente efectivo** en condiciones de baja visibilidad y presencia de nubes
+
+## Lecciones Aprendidas
+
+### Hallazgos Técnicos Clave
+
+1. **Estabilidad > Agresividad:** Learning rate conservador (0.005) superó a enfoques agresivos
+2. **Mixup contraproducente:** Para clases minoritarias críticas, mixup diluye características específicas
+3. **Preprocesamiento fundamental:** CLAHE demostró valor consistente en todas las configuraciones
+4. **Umbral optimizado válido:** Confidence=0.15 es estrategia apropiada para aumentar el recall.
+5. **Fine-tuning eficiente:** 15 épocas suficientes con transfer learning adecuado
+
+### Metodología Validada
+
+- **Búsqueda sistemática** más efectiva que optimización manual
+- **Augmentación híbrida** exitosa para datasets pequeños (91 → 4000 imágenes)
+- **Evaluación comparativa** esencial para justificar decisiones técnicas
+
+## Estructura del Proyecto
 
 ```
 deteccion-mineria-ilegal/
 ├── data/
-│   ├── raw_images/                 # Imágenes originales sin procesar
-│   ├── processed_images/           # Imágenes con preprocesamiento aplicado
-│   ├── annotations/                # Archivos de anotaciones en formato YOLO
-│   └── augmented_data/            # Datos aumentados
+│   ├── modelo_yolov11_dataset_completo/           # Dataset original
+│   ├── modelo_yolov11_dataset_completo_preprocesado/  # Dataset con CLAHE
+│   └── augmented_data/                           # Datos con augmentación offline
 ├── models/
-│   ├── yolov11/                   # Configuraciones del modelo YOLOv11
-│   ├── trained_models/            # Modelos entrenados (.pt files)
-│   └── configs/                   # Archivos de configuración YAML
-├── notebooks/
-│   ├── data_exploration.ipynb     # Análisis exploratorio de datos
-│   ├── preprocessing.ipynb        # Notebooks de preprocesamiento
-│   ├── model_training.ipynb       # Entrenamiento de modelos
-│   └── model_evaluation.ipynb     # Evaluación y métricas
+│   ├── conservative_final/                       # Modelo ganador
+│   ├── hyperparameter_search/                    # Resultados de búsqueda
+│   └── configs/                                  # Configuraciones YAML
 ├── scripts/
-│   ├── preprocess.py              # Script de preprocesamiento
-│   ├── train.py                   # Script de entrenamiento
-│   ├── evaluate.py                # Script de evaluación
-│   └── predict.py                 # Script de predicción
-├── config/
-│   ├── config.yaml                # Configuración principal
-│   └── dataset.yaml               # Configuración del dataset
-├── deployment/
-│   ├── app.py                     # Aplicación web de demostración
-│   ├── __init__.py
-│   ├── exploracion.py             # Módulo de exploración de datos
-│   ├── preprocessing_imagenes.py   # Módulo de preprocesamiento
-│   └── yolo_prediction.py         # Módulo de predicción YOLO
-├── docs/
-│   └── paper.pdf                  # Documento académico del proyecto
-├── requirements.txt               # Dependencias del proyecto
-└── README.md                      # Este archivo
+│   ├── final_training.py                        # Entrenamiento configuración Conservative
+│   ├── hyperparameter_search.py                 # Búsqueda sistemática
+│   ├── preprocess.py                            # Preprocesamiento CLAHE
+│   └── augmentation.py                          # Augmentación híbrida
+├── notebooks/
+│   ├── hyperparameter_analysis.ipynb           # Análisis comparativo
+│   ├── model_evaluation.ipynb                  # Evaluación detallada
+│   └── results_visualization.ipynb             # Visualización de resultados
+└── deployment/
+    ├── conservative_mining_detector.pt         # Modelo final optimizado
+    └── inference_app.py                        # Aplicación de inferencia
 ```
 
-## ⚙️ Requisitos de Instalación
+## Requisitos de Instalación
 
-Para ejecutar este proyecto, necesitarás instalar las siguientes dependencias. Se recomienda usar un entorno virtual.
-
-### Crear Entorno Virtual
-
-```bash
-# Crear un entorno virtual
-python -m venv venv
-
-# Activar el entorno virtual
-# En Linux/macOS:
-source venv/bin/activate
-# En Windows:
-venv\Scripts\activate
-```
-
-### Instalar Dependencias
-
-```bash
-# Instalar las dependencias principales
-pip install -r requirements.txt
-```
-
-### Archivo requirements.txt
+### Dependencias Principales
 
 ```txt
 torch>=2.0.0
@@ -197,156 +192,91 @@ torchvision>=0.15.0
 ultralytics>=8.0.0
 opencv-python>=4.8.0
 numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-pandas>=2.0.0
 albumentations>=1.3.0
-scikit-learn>=1.3.0
+matplotlib>=3.7.0
+pandas>=2.0.0
 tqdm>=4.65.0
-Pillow>=9.5.0
-pyyaml>=6.0
-tensorboard>=2.13.0
-scipy>=1.10.0
+scikit-learn>=1.3.0
 ```
 
 ### Requisitos de Hardware
 
-**Mínimos:**
-- GPU con al menos 8GB VRAM (NVIDIA GTX 1070 o superior)
-- 16GB RAM
-- 50GB espacio libre en disco
+**Utilizados en el proyecto:**
+- GPU: RTX 4090 24GB VRAM
+- RAM: 32GB
+- Tiempo de entrenamiento: ~65 minutos por configuración
 
-**Recomendados:**
-- GPU con 12GB+ VRAM (NVIDIA RTX 3080 o superior)
-- 32GB RAM
-- SSD con 100GB espacio libre
+**Mínimos recomendados:**
+- GPU: 8GB+ VRAM
+- RAM: 16GB
+- Almacenamiento: 50GB libres
 
-## 🚀 Uso
+## Uso
+
+### Entrenamiento con Configuración Conservative
+
+```bash
+python scripts/final_training.py
+```
+
+### Búsqueda de Hiperparámetros
+
+```bash
+python scripts/hyperparameter_search.py --configs 4 --datasets 2
+```
 
 ### Preprocesamiento de Datos
 
-Si tienes imágenes sin preprocesar, puedes usar el script de preprocesamiento:
-
 ```bash
-python scripts/preprocess.py --input_dir data/raw_images --output_dir data/processed_images --apply_clahe --apply_median_filter
+python scripts/preprocess.py --input_dir data/original --output_dir data/preprocessed --apply_clahe --apply_median_filter
 ```
 
-**Parámetros:**
-- `--input_dir`: Directorio con imágenes originales
-- `--output_dir`: Directorio de salida para imágenes procesadas
-- `--apply_clahe`: Aplicar ecualización adaptativa del histograma
-- `--apply_median_filter`: Aplicar filtro mediano para reducción de ruido
+### Inferencia
 
+```python
+from ultralytics import YOLO
 
-**Parámetros principales:**
-- `--model_type`: Variante del modelo (yolov11n, yolov11s, yolov11m, yolov11l, yolov11x)
-- `--data_path`: Ruta al archivo YAML de configuración del dataset
-- `--epochs`: Número de épocas de entrenamiento
-- `--freeze`: Número de capas a congelar (0 = ninguna, 1 = backbone)
-- `--batch_size`: Tamaño del lote
-
-
-### 5. Aplicación Web de Demostración
-
-Para ejecutar la aplicación web interactiva:
-
-```bash
-# Ejecutar la aplicación
-python deployment/app.py
-
-# La aplicación estará disponible en http://localhost:5000
+model = YOLO('deployment/conservative_mining_detector.pt')
+results = model.predict('test_image.jpg', conf=0.15, iou=0.6)
 ```
 
-## 📊 Configuraciones Experimentales
-
-El proyecto incluye 20 configuraciones experimentales diferentes que varían en:
-
-| ID | Filtrado | Preprocesamiento | Método | Épocas | Descripción |
-|----|----------|------------------|--------|--------|-------------|
-| 15 | ✅ | ❌ | Finetuning (freeze=0) | 15 | **Mejor desempeño general** |
-| 18 | ✅ | ✅ | Finetuning (freeze=1) | 15 | **Mejor para minería ilegal** |
-| 5 | ❌ | ❌ | Completo | 150 | Baseline de larga duración |
-| 6 | ✅ | ✅ | Completo | 150 | Mejor preprocesamiento largo |
-
-Ver el documento completo para todas las configuraciones evaluadas.
-
-### Archivo dataset.yaml
-
-```yaml
-# Configuración del dataset para YOLO
-train: data/train/images
-val: data/val/images
-test: data/test/images
-
-nc: 5  # Número de clases
-names: 
-  0: vehiculos
-  1: bodegas
-  2: caminos
-  3: rios
-  4: mineria_ilegal
-```
-
-## Consideraciones Importantes
-
-### Priorización del Recall
-En este contexto, **es preferible tolerar falsos positivos que omitir zonas con actividad minera ilegal**. El modelo prioriza la detección completa (recall) sobre la precisión para garantizar que ninguna área crítica pase desapercibida.
+## Limitaciones y Trabajo Futuro
 
 ### Limitaciones Actuales
-- La clase "bodegas" presenta menor precisión debido a similitudes visuales con otras estructuras
-- El rendimiento puede degradarse en condiciones de iluminación extrema
-- Requiere validación humana para confirmación de alertas críticas
 
-### Recomendaciones de Implementación
-1. **Validación en dos etapas:** Usar el modelo como filtro inicial seguido de revisión humana
-2. **Actualización continua:** Reentrenar periódicamente con nuevos datos
-3. **Ensemble de modelos:** Combinar predicciones de múltiples configuraciones para mayor robustez
+- **Dataset limitado:** Solo 65 imágenes originales de minería ilegal
+- **Validación geográfica:** Entrenado en región específica de Colombia
+- **Condiciones de captura:** Principalmente cámaras FLIR en condiciones diurnas
 
-## 🔬 Trabajo Futuro
+### Trabajo Futuro
 
-### Mejoras Técnicas Planificadas
-- [ ] Implementación de YOLOv8 y comparación de rendimiento
-- [ ] Integración con modelos de segmentación semántica (SAM)
-- [ ] Desarrollo de un sistema de ensemble para mayor precisión
-- [ ] Optimización para detección en tiempo real en dispositivos edge
+**Mejoras técnicas:**
+- Implementación de YOLOv8 y modelos más recientes
+- Ensemble de múltiples configuraciones
+- Optimización para inferencia en tiempo real
 
-### Extensiones del Dataset
-- [ ] Incorporación de imágenes satelitales de diferentes sensores
-- [ ] Aumento de datos con más variaciones estacionales
-- [ ] Inclusión de datos de radar (SAR) para condiciones adversas
-- [ ] Datos de diferentes regiones geográficas para generalización
+**Expansión de datos:**
+- Incorporación de datos satelitales
+- Diversificación geográfica
+- Datos de diferentes sensores (SAR, multiespectrales)
 
-### Funcionalidades Adicionales
-- [ ] API REST para integración con sistemas externos
-- [ ] Dashboard web para monitoreo en tiempo real
-- [ ] Sistema de alertas automáticas
-- [ ] Módulo de análisis temporal para detección de cambios
+**Funcionalidades:**
+- API REST para integración
+- Sistema de monitoreo continuo
+- Dashboard de alertas en tiempo real
 
+## Consideraciones Éticas y de Implementación
 
-## 📄 Licencia
+### Priorización del Recall
+En detección de minería ilegal, **es preferible tolerar falsos positivos que omitir actividad real**. La configuración Conservative con umbral de confianza bajo (0.15) está justificada por el alto costo de falsos negativos en vigilancia ambiental.
 
-Este proyecto está licenciado bajo la [MIT License](LICENSE).
+### Recomendaciones de Despliegue
+1. **Validación humana:** Usar como sistema de filtrado inicial
+2. **Actualización continua:** Reentrenamiento con nuevos datos
+3. **Monitoreo de deriva:** Validación periódica en datos reales
+4. **Integración gradual:** Implementación piloto antes de despliegue completo
 
-## 🙏 Agradecimientos
-
-- A la **Universidad de los Andes** por el apoyo y los recursos brindados para la realización de este proyecto.
-- A la comunidad de **Ultralytics** por el desarrollo y mantenimiento de YOLO.
-- A los desarrolladores de **OpenCV** y **Albumentations** por las herramientas de procesamiento de imágenes.
-- A las autoridades ambientales por proporcionar contexto sobre la problemática de la minería ilegal.
-
-## 📚 Referencias
-
-1. **Boscó Arias, J. A.** (2023). "Minería ilegal y el impacto a la seguridad ambiental en la región amazónica en Colombia." En *El crimen organizado en la Amazonía: Escenario de desafíos para la seguridad regional*. Sello Editorial ESDEG.
-
-2. **Foro Nacional Ambiental.** (2024). *Informe Nacional: Minería ilegal y contaminación por mercurio en Colombia.*
-
-3. **Terven, J., Córdova-Esparza, D.-M., & Romero-González, J.-A.** (2023). "A comprehensive review of YOLO architectures in computer vision: From YOLOv1 to YOLOv8 and YOLO-NAS." *Machine Learning and Knowledge Extraction*, 5(4), 1680–1716.
-
-4. **Reza, A. M.** (2004). "Realization of the contrast limited adaptive histogram equalization (CLAHE) for real-time image enhancement." *Journal of VLSI Signal Processing Systems for Signal, Image and Video Technology*, 38, 35–44.
-
----
-
-## 📞 Contacto
+## Contacto
 
 Para preguntas, sugerencias o colaboraciones:
 
