@@ -167,44 +167,259 @@ Identificamos que el modelo tiene mas capacidad para aprender, consideramos que 
 ## Estructura del Proyecto
 
 ```
-deteccion-mineria-ilegal/
-├── data/
-│   ├── modelo_yolov11_dataset_completo/           # Dataset original
-│   ├── modelo_yolov11_dataset_completo_preprocesado/  # Dataset con CLAHE
-│   └── augmented_data/                           # Datos con augmentación offline
-├── models/
-│   ├── conservative_final/                       # Modelo ganador
-│   ├── hyperparameter_search/                    # Resultados de búsqueda
-│   └── configs/                                  # Configuraciones YAML
-├── scripts/
-│   ├── final_training.py                        # Entrenamiento configuración Conservative
-│   ├── hyperparameter_search.py                 # Búsqueda sistemática
-│   ├── preprocess.py                            # Preprocesamiento CLAHE
-│   └── augmentation.py                          # Augmentación híbrida
-├── notebooks/
-│   ├── hyperparameter_analysis.ipynb           # Análisis comparativo
-│   ├── model_evaluation.ipynb                  # Evaluación detallada
-│   └── results_visualization.ipynb             # Visualización de resultados
-└── deployment/
-    ├── conservative_mining_detector.pt         # Modelo final optimizado
-    └── inference_app.py                        # Aplicación de inferencia
+FLIR_GPF2/
+├── app/                        # Paquete principal (ver architecture.md)
+│   ├── config.py               # Configuracion centralizada (Singleton)
+│   ├── schemas/                # Modelos Pydantic
+│   ├── utils/                  # Funciones utilitarias
+│   ├── core/                   # Operaciones sobre el dataset
+│   ├── preprocessing/          # Filtros de imagen (CLAHE, ruido)
+│   ├── augmentation/           # Augmentacion por clase
+│   ├── training/               # Entrenamiento, HP search, fine-tuning
+│   ├── adapters/               # Wrappers para YOLO y rutas
+│   ├── facades/                # Orquestadores de pipeline
+│   └── visualization/          # Graficas y visualizaciones
+├── scripts/                    # Entry points ejecutables
+│   ├── run_data_pipeline.py    # Preparacion de datos completa
+│   ├── run_preprocessing.py    # CLAHE + filtro mediano
+│   ├── run_training.py         # Entrenamiento conservative
+│   ├── run_hyperparameter_search.py
+│   ├── run_finetuning.py       # Fine-tuning con backbone congelado
+│   ├── run_evaluation.py       # Evaluacion de modelo
+│   └── run_full_pipeline.py    # Pipeline end-to-end
+├── architecture.md             # Documentacion de arquitectura para LLMs
+├── requirements.txt
+└── .gitignore
 ```
 
-## Requisitos de Instalación
+---
 
-### Dependencias Principales
+## Estructura Esperada del Dataset
 
-```txt
-torch>=2.0.0
-torchvision>=0.15.0
-ultralytics>=8.0.0
-opencv-python>=4.8.0
-numpy>=1.24.0
-albumentations>=1.3.0
-matplotlib>=3.7.0
-pandas>=2.0.0
-tqdm>=4.65.0
-scikit-learn>=1.3.0
+El pipeline espera los datos en estructuras especificas para cada etapa.
+A continuacion se detalla que estructura debe tener el directorio de datos
+en cada punto del pipeline.
+
+### Etapa 1 -- Datos Crudos (entrada de `run_data_pipeline.py`)
+
+El directorio `data/` debe contener las imagenes y etiquetas originales
+separadas en carpetas por split. Las etiquetas usan formato YOLO
+(`class_id x_center y_center width height`, coordenadas normalizadas 0-1).
+
+```
+data/
+├── Imagenes/                         # o "images/"
+│   ├── train/
+│   │   ├── video_11min_001.jpg
+│   │   ├── video_11min_002.jpg
+│   │   └── ...
+│   ├── val/                          # acepta tambien "validation/" o "valid/"
+│   │   └── *.jpg
+│   └── test/
+│       └── *.jpg
+└── Etiquetas/                        # o "labels/"
+    ├── train/
+    │   ├── video_11min_001.txt       # OPCIONAL: si falta, se crea vacio (background)
+    │   └── ...
+    ├── val/
+    │   └── *.txt
+    └── test/
+        └── *.txt
+```
+
+**Formato de cada archivo `.txt` de etiqueta:**
+
+```
+<class_id> <x_center> <y_center> <width> <height>
+```
+
+Ejemplo con dos objetos en una imagen:
+
+```
+1 0.512345 0.345678 0.120000 0.085000
+4 0.723456 0.567890 0.200000 0.150000
+```
+
+| class_id | Clase |
+|----------|-------|
+| 0 | Vehiculos |
+| 1 | Bodegas |
+| 2 | Caminos |
+| 3 | Rios |
+| 4 | Mineria ilegal |
+
+> Las imagenes sin objetos (background) deben tener un archivo `.txt` vacio
+> o simplemente no tener archivo de etiqueta (se crea automaticamente).
+
+### Etapa 2 -- Dataset Unificado (salida automatica)
+
+`DatasetUnifier` mezcla todos los splits en una estructura plana.
+**No es necesario crearlo manualmente**, se genera automaticamente.
+
+```
+data_unified/
+├── images/
+│   ├── video_11min_001.jpg
+│   ├── video_11min_002.jpg
+│   └── ... (todas las imagenes juntas)
+└── labels/
+    ├── video_11min_001.txt
+    ├── video_11min_002.txt
+    └── ... (todas las etiquetas juntas)
+```
+
+### Etapa 3 -- Dataset YOLO con Augmentacion (salida automatica)
+
+`StrategicSplitter` redistribuye los datos y `ClassAugmentor` genera
+imagenes sinteticas. Los archivos aumentados siguen la convencion
+`aug_c{clase}_{stem_original}_{secuencia}.jpg`.
+
+```
+yolo_dataset/
+├── train/
+│   ├── images/
+│   │   ├── video_11min_001.jpg           # imagen original
+│   │   ├── aug_c4_video_11min_098_0000.jpg   # augmentacion clase 4
+│   │   ├── aug_c4_video_11min_098_0001.jpg
+│   │   ├── aug_c0_video_11min_465_0000.jpg   # augmentacion clase 0
+│   │   ├── aug_c-1_video_11min_002_0000.jpg  # augmentacion background
+│   │   └── ...
+│   └── labels/
+│       ├── video_11min_001.txt
+│       ├── aug_c4_video_11min_098_0000.txt
+│       ├── aug_c-1_video_11min_002_0000.txt  # vacio (background)
+│       └── ...
+├── val/
+│   ├── images/
+│   │   └── *.jpg
+│   └── labels/
+│       └── *.txt
+└── test/
+    ├── images/
+    │   └── *.jpg
+    └── labels/
+        └── *.txt
+```
+
+**Objetivos de augmentacion por clase (configurables en `app/config.py`):**
+
+| Clase | Nombre | Objetivo |
+|-------|--------|----------|
+| 4 | Mineria ilegal | 3500 |
+| 0 | Vehiculos | 2000 |
+| 1 | Bodegas | 3000 |
+| 2 | Caminos | 3000 |
+| 3 | Rios | 3000 |
+| -1 | Background | 2500 |
+
+### Etapa 4 -- Dataset Preprocesado (entrada de entrenamiento)
+
+`DatasetPreprocessor` aplica el filtro mediano y CLAHE a cada imagen.
+Las etiquetas se copian sin cambios. **Este directorio es el que se usa
+para entrenamiento.**
+
+```
+preprocessed/
+├── train/
+│   ├── images/
+│   │   └── *.jpg                    # imagenes con CLAHE + filtro mediano
+│   └── labels/
+│       └── *.txt                    # etiquetas sin modificar
+├── val/
+│   ├── images/
+│   │   └── *.jpg
+│   └── labels/
+│       └── *.txt
+├── test/
+│   ├── images/
+│   │   └── *.jpg
+│   └── labels/
+│       └── *.txt
+└── dataset.yaml                     # REQUERIDO para entrenamiento
+```
+
+### Archivo `dataset.yaml` (requerido para entrenamiento y fine-tuning)
+
+El archivo `dataset.yaml` debe existir en la raiz del dataset que se
+pasa al entrenador. Formato estandar de Ultralytics:
+
+```yaml
+path: /ruta/absoluta/al/dataset      # o ruta relativa desde donde se ejecuta
+train: train/images
+val: val/images
+test: test/images
+
+nc: 5
+names:
+  0: Vehicles
+  1: Warehouses
+  2: Roads
+  3: Rivers
+  4: Illegal Mining
+```
+
+> **Importante:** El `ConservativeTrainer` y el `Finetuner` buscan
+> `dataset.yaml` dentro de la carpeta del dataset. Si no existe, el
+> entrenamiento fallara con un error de Ultralytics.
+
+### Etapa 5 -- Salidas de Entrenamiento (generadas automaticamente)
+
+```
+conservative_final_<nombre>_<timestamp>/
+├── conservative_final_<dataset_name>/
+│   └── weights/
+│       ├── best.pt                  # mejor modelo (usado para evaluacion)
+│       └── last.pt                  # ultimo checkpoint
+├── conservative_mining_metrics.json # metricas detalladas
+└── conservative_mining_detector_recall_0.XXX.pt  # copia del mejor modelo
+```
+
+### Etapa 6 -- Salidas de Fine-tuning (generadas automaticamente)
+
+```
+finetuning_results/
+└── finetuning_run/
+    └── weights/
+        ├── best.pt
+        └── last.pt
+```
+
+### Resumen del Flujo de Datos
+
+```
+data/  (datos crudos)
+  |  DatasetUnifier
+  v
+data_unified/  (estructura plana)
+  |  StrategicSplitter + ClassAugmentor + LabelCleaner + DuplicateRemover + ClassBalancer
+  v
+yolo_dataset/  (YOLO format, augmentado y limpio)
+  |  DatasetPreprocessor
+  v
+preprocessed/  (CLAHE + filtro mediano) + dataset.yaml
+  |  ConservativeTrainer
+  v
+conservative_final_*/  (modelo entrenado)
+  |  Finetuner (opcional)
+  v
+finetuning_results/  (modelo afinado)
+```
+
+---
+
+## Requisitos de Instalacion
+
+### Dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+Las dependencias principales son:
+
+```
+ultralytics, torch, pydantic, pydantic-settings, albumentations,
+opencv-python, numpy, pandas, matplotlib, Pillow, scikit-learn, tqdm
 ```
 
 ### Requisitos de Hardware
@@ -212,31 +427,41 @@ scikit-learn>=1.3.0
 **Utilizados en el proyecto:**
 - GPU: RTX 4090 24GB VRAM
 - RAM: 32GB
-- Tiempo de entrenamiento: ~65 minutos por configuración
+- Tiempo de entrenamiento: ~65 minutos por configuracion
 
-**Mínimos recomendados:**
+**Minimos recomendados:**
 - GPU: 8GB+ VRAM
 - RAM: 16GB
 - Almacenamiento: 50GB libres
 
 ## Uso
 
-### Entrenamiento con Configuración Conservative
+### Pipeline Completo (end-to-end)
 
 ```bash
-python scripts/final_training.py
+python scripts/run_full_pipeline.py
 ```
 
-### Búsqueda de Hiperparámetros
+### Etapas Individuales
 
 ```bash
-python scripts/hyperparameter_search.py --configs 4 --datasets 2
-```
+# 1. Preparacion de datos (unificar, split, augmentar, limpiar)
+python scripts/run_data_pipeline.py
 
-### Preprocesamiento de Datos
+# 2. Preprocesamiento (CLAHE + filtro mediano)
+python scripts/run_preprocessing.py
 
-```bash
-python scripts/preprocess.py --input_dir data/original --output_dir data/preprocessed --apply_clahe --apply_median_filter
+# 3. Entrenamiento conservative
+python scripts/run_training.py
+
+# 4. Busqueda de hiperparametros
+python scripts/run_hyperparameter_search.py
+
+# 5. Fine-tuning (requiere modelo entrenado)
+python scripts/run_finetuning.py --model path/to/best.pt
+
+# 6. Evaluacion
+python scripts/run_evaluation.py --model path/to/best.pt
 ```
 
 ### Inferencia
@@ -244,8 +469,14 @@ python scripts/preprocess.py --input_dir data/original --output_dir data/preproc
 ```python
 from ultralytics import YOLO
 
-model = YOLO('deployment/conservative_mining_detector.pt')
-results = model.predict('test_image.jpg', conf=0.15, iou=0.6)
+model = YOLO("path/to/best.pt")
+results = model.predict("test_image.jpg", conf=0.15, iou=0.6)
+```
+
+### Verificacion Rapida de Imports
+
+```bash
+python -c "from app.config import settings; print(settings.TARGET_CLASS)"
 ```
 
 ## Limitaciones y Trabajo Futuro
