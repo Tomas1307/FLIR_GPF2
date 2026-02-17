@@ -1,13 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data directories
+data/
+data_unified/
+yolo_dataset/
+preprocessed/
+preprocesamiento/
+
+# Training outputs
+runs/
+conservative_final_*/
+hyperparameter_search_*/
+finetuning_results/
+finetuning_resultados/
+
+# Model weights
+*.pt
+*.onnx
+*.engine
+
+# Images and large files
 *.png
 *.jpg
+*.jpeg
 *.avif
-data/
+grid_*.png
+
+# Jupyter
+.ipynb_checkpoints/
+nul
+
+# Environment
+.env
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Legacy
+experiments/
+mlruns/
+YOLO_data/
+labels/
+images/
 test/
 train/
 val/
 *.yaml
-labels/
-images/
-experiments/
-mlruns/
-YOLO_data/
+.claude/
+CLAUDE.md
