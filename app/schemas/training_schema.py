@@ -33,8 +33,8 @@ class TrainingConfig(BaseModel):
     mosaic: float = Field(default=0.8)
     mixup: float = Field(default=0.0)
     image_size: int = Field(default=640)
-    epochs: int = Field(default=300)
-    patience: int = Field(default=70)
+    epochs: int = Field(default=250)
+    patience: int = Field(default=25)
     workers: int = Field(default=16)
     save_period: int = Field(default=10)
     optimizer: str = Field(

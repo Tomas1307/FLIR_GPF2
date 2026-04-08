@@ -161,6 +161,25 @@ class HyperparameterSearcher:
                 weight_decay=0.0005, dropout=0.1, mosaic=0.8, mixup=0.1,
                 image_size=640,
             ),
+            # -- yolo11l configs -----------------------------------------------
+            HyperparameterConfig(
+                name="large_baseline",
+                batch_size=32, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo11l.pt",
+            ),
+            HyperparameterConfig(
+                name="large_high_res",
+                batch_size=24, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=800, model_weights="yolo11l.pt",
+            ),
+            HyperparameterConfig(
+                name="large_adam",
+                batch_size=32, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo11l.pt", optimizer="Adam",
+            ),
         ]
 
     def train_single_config(
