@@ -5,8 +5,8 @@ incrementally so nothing is lost if the process is interrupted.
 
 Usage::
 
-    python scripts/run_overnight.py           # full run
-    python scripts/run_overnight.py --dry-run  # verify setup only
+    python -m scripts.run_overnight           # full run
+    python -m scripts.run_overnight --dry-run  # verify setup only
 """
 
 import argparse
@@ -35,7 +35,7 @@ def dry_run() -> None:
         logger.info("GPU: %s", torch.cuda.get_device_name(0))
         logger.info(
             "GPU memory: %.1f GB",
-            torch.cuda.get_device_properties(0).total_mem / 1024**3,
+            torch.cuda.get_device_properties(0).total_memory / 1024**3,
         )
 
     dataset_yaml = settings.YOLO_ROOT / "dataset.yaml"
