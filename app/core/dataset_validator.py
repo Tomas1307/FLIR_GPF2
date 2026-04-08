@@ -87,13 +87,20 @@ class DatasetValidator:
             logger.info("Data leakage check: PASSED")
         return passed
 
+    def _original_image_stems(self, split: str) -> Set[str]:
+        """Return non-augmented image stems for a given split."""
+        return {s for s in self._image_stems(split) if not s.startswith("aug_")}
+
     def check_split_proportions(self) -> bool:
         """Verify train/val/test sizes are approximately 70/15/15.
+
+        Uses only original (non-augmented) images since augmentation only
+        adds to train, which would skew the ratios.
 
         Returns:
             ``True`` if proportions are within tolerance.
         """
-        counts = {s: len(self._image_stems(s)) for s in SPLITS}
+        counts = {s: len(self._original_image_stems(s)) for s in SPLITS}
         total = sum(counts.values())
         if total == 0:
             logger.error("No images found in any split")
@@ -101,7 +108,7 @@ class DatasetValidator:
 
         ratios = {s: counts[s] / total for s in SPLITS}
         logger.info(
-            "Split proportions — train: %.1f%%, val: %.1f%%, test: %.1f%% (total: %d)",
+            "Split proportions (original images) — train: %.1f%%, val: %.1f%%, test: %.1f%% (total: %d)",
             ratios["train"] * 100, ratios["val"] * 100, ratios["test"] * 100, total,
         )
 
