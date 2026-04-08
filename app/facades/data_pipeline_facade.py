@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 from typing import Dict
 
+import yaml
 from tqdm import tqdm
 
 from app.augmentation.class_augmentor import ClassAugmentor
@@ -58,6 +59,24 @@ class DataPipelineFacade:
         self.data_root = Path(data_root)
         self.unified_root = Path(unified_root)
         self.yolo_root = Path(yolo_root)
+
+    def _write_dataset_yaml(self) -> None:
+        """Write dataset.yaml to yolo_root with absolute path and class names."""
+        class_names = [
+            settings.CLASS_NAMES[i] for i in range(settings.NUM_CLASSES)
+        ]
+        content = {
+            "path": str(self.yolo_root.resolve()),
+            "train": "train/images",
+            "val": "val/images",
+            "test": "test/images",
+            "nc": settings.NUM_CLASSES,
+            "names": class_names,
+        }
+        yaml_path = self.yolo_root / "dataset.yaml"
+        with open(yaml_path, "w") as f:
+            yaml.dump(content, f, default_flow_style=False, allow_unicode=True)
+        logger.info("Wrote dataset.yaml → %s", yaml_path)
 
     def _preprocess_split_images(self, pipeline: PreprocessingPipeline) -> None:
         """Apply preprocessing in-place to all images already in YOLO_ROOT.
@@ -129,6 +148,7 @@ class DataPipelineFacade:
         # 4. Copy to YOLO
         logger.info("Stage 4/9: Copying splits to YOLO structure")
         stats = splitter.copy_to_yolo(splits)
+        self._write_dataset_yaml()
 
         # 5. Preprocess (noise filter + CLAHE) — BEFORE augmentation
         logger.info("Stage 5/9: Preprocessing images (noise filter + CLAHE)")

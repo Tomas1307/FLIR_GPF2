@@ -27,6 +27,7 @@ import sys
 from pathlib import Path
 
 import torch
+import yaml
 
 from app.config import settings
 from app.core.dataset_validator import DatasetValidator
@@ -52,6 +53,25 @@ def _split_has_images(root: Path) -> bool:
     """Return True if *root*/train/images/ contains at least one file."""
     train_images = root / "train" / "images"
     return train_images.exists() and any(train_images.iterdir())
+
+
+def _ensure_dataset_yaml(dataset_root: Path) -> None:
+    """Create dataset.yaml in *dataset_root* if it does not already exist."""
+    yaml_path = dataset_root / "dataset.yaml"
+    if yaml_path.exists():
+        return
+    class_names = [settings.CLASS_NAMES[i] for i in range(settings.NUM_CLASSES)]
+    content = {
+        "path": str(dataset_root.resolve()),
+        "train": "train/images",
+        "val": "val/images",
+        "test": "test/images",
+        "nc": settings.NUM_CLASSES,
+        "names": class_names,
+    }
+    with open(yaml_path, "w") as f:
+        yaml.dump(content, f, default_flow_style=False, allow_unicode=True)
+    logger.info("Created missing dataset.yaml → %s", yaml_path)
 
 
 def _find_latest_checkpoint() -> Path | None:
@@ -275,6 +295,7 @@ def main() -> None:
         effective_dataset = stage_preprocess_fallback()
 
     logger.info("Effective training dataset: %s", effective_dataset)
+    _ensure_dataset_yaml(effective_dataset)
 
     # -- Resolve resume checkpoint ---------------------------------------------
     resume_ckpt: Path | None = None
