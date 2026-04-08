@@ -225,7 +225,7 @@ class HyperparameterSearcher:
             elapsed = time.time() - start
 
             val_results = adapter.validate(
-                data=str(Path(dataset_path) / "dataset.yaml"), verbose=False
+                data=str((Path(dataset_path) / "dataset.yaml").resolve()), verbose=False
             )
 
             target_recall = target_precision = target_ap50 = 0.0

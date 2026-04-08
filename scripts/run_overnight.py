@@ -15,9 +15,11 @@ Resilience logic:
 
 Usage::
 
-    python -m scripts.run_overnight           # full run
-    python -m scripts.run_overnight --dry-run  # verify setup only
-    python -m scripts.run_overnight --fresh    # force re-run from scratch
+    python -m scripts.run_overnight                    # full run
+    python -m scripts.run_overnight --dry-run          # verify setup only
+    python -m scripts.run_overnight --fresh            # force re-run from scratch
+    python -m scripts.run_overnight --resume           # auto-detect latest checkpoint
+    python -m scripts.run_overnight --resume path/to/last.pt  # explicit checkpoint
 """
 
 import argparse
@@ -50,6 +52,16 @@ def _split_has_images(root: Path) -> bool:
     """Return True if *root*/train/images/ contains at least one file."""
     train_images = root / "train" / "images"
     return train_images.exists() and any(train_images.iterdir())
+
+
+def _find_latest_checkpoint() -> Path | None:
+    """Return the most recent last.pt checkpoint from conservative training runs."""
+    candidates = sorted(
+        Path(".").glob("conservative_final_*/*/weights/last.pt"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    return candidates[0] if candidates else None
 
 
 # ---------------------------------------------------------------------------
@@ -161,16 +173,25 @@ def stage_preprocess_fallback() -> Path:
         return settings.YOLO_ROOT
 
 
-def stage_training(dataset_root: Path) -> float:
+def stage_training(dataset_root: Path, resume_from: Path | None = None) -> float:
     """Stage 3: Conservative training.
+
+    Args:
+        dataset_root: Path to the YOLO dataset.
+        resume_from: Optional checkpoint path to resume from.
 
     Returns the mining-class recall (0.0 on failure).
     """
     logger.info("=== STAGE 3: CONSERVATIVE TRAINING ===")
     logger.info("Training dataset: %s", dataset_root)
+    if resume_from:
+        logger.info("Resuming from checkpoint: %s", resume_from)
     try:
         trainer = ConservativeTrainer(TrainingConfig())
-        _, metrics = trainer.train(str(dataset_root))
+        _, metrics = trainer.train(
+            str(dataset_root),
+            resume_from=str(resume_from) if resume_from else None,
+        )
         recall_data = metrics.get("recall_optimised", {})
         recall = recall_data.get("recall", 0.0) if isinstance(recall_data, dict) else 0.0
         logger.info("Conservative training recall: %.4f", recall)
@@ -206,6 +227,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Overnight training pipeline")
     parser.add_argument("--dry-run", action="store_true", help="Verify setup only")
     parser.add_argument("--fresh", action="store_true", help="Force re-run all stages from scratch")
+    parser.add_argument(
+        "--resume",
+        nargs="?",
+        const="auto",
+        metavar="CHECKPOINT",
+        help="Resume conservative training. Omit path to auto-detect latest checkpoint.",
+    )
     args = parser.parse_args()
 
     if args.dry_run:
@@ -248,8 +276,23 @@ def main() -> None:
 
     logger.info("Effective training dataset: %s", effective_dataset)
 
+    # -- Resolve resume checkpoint ---------------------------------------------
+    resume_ckpt: Path | None = None
+    if args.resume:
+        if args.resume == "auto":
+            resume_ckpt = _find_latest_checkpoint()
+            if resume_ckpt:
+                logger.info("Auto-detected checkpoint: %s", resume_ckpt)
+            else:
+                logger.warning("No checkpoint found for --resume auto — starting fresh training")
+        else:
+            resume_ckpt = Path(args.resume)
+            if not resume_ckpt.exists():
+                logger.error("Checkpoint not found: %s — aborting", resume_ckpt)
+                sys.exit(1)
+
     # -- Stage 3: Conservative training ----------------------------------------
-    recall = stage_training(effective_dataset)
+    recall = stage_training(effective_dataset, resume_from=resume_ckpt)
 
     # -- Stage 4: Recall gate --------------------------------------------------
     if recall < settings.RECALL_GATE:

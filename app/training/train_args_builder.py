@@ -42,7 +42,7 @@ class TrainArgsBuilder:
         Returns:
             Dictionary of keyword arguments for ``YOLO.train()``.
         """
-        yaml_path = Path(dataset_path) / "dataset.yaml"
+        yaml_path = (Path(dataset_path) / "dataset.yaml").resolve()
 
         return {
             # Core
