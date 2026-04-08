@@ -199,8 +199,8 @@ class HyperparameterSearcher:
             mixup=hp_config.mixup,
             image_size=hp_config.image_size,
             optimizer=hp_config.optimizer,
-            epochs=self.base_epochs,
-            patience=5,
+            epochs=50,
+            patience=10,
         )
 
         builder = TrainArgsBuilder(training_config)
