@@ -71,13 +71,17 @@ def main() -> None:
 
     logger.info("=== OVERNIGHT PIPELINE START ===")
 
-    # Stage 1: Data pipeline
-    logger.info("=== STAGE 1: DATA PREPARATION ===")
-    try:
-        DataPipelineFacade().run()
-    except Exception:
-        logger.exception("Data pipeline failed — aborting")
-        sys.exit(1)
+    # Stage 1: Data pipeline (skip if dataset already exists)
+    dataset_yaml = settings.YOLO_ROOT / "dataset.yaml"
+    if dataset_yaml.exists():
+        logger.info("=== STAGE 1: SKIPPED (dataset already exists at %s) ===", settings.YOLO_ROOT)
+    else:
+        logger.info("=== STAGE 1: DATA PREPARATION ===")
+        try:
+            DataPipelineFacade().run()
+        except Exception:
+            logger.exception("Data pipeline failed — aborting")
+            sys.exit(1)
 
     # Stage 2: Validate
     logger.info("=== STAGE 2: DATASET VALIDATION ===")
