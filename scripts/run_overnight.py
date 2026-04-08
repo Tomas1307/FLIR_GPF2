@@ -63,6 +63,7 @@ def main() -> None:
     """Execute the overnight pipeline."""
     parser = argparse.ArgumentParser(description="Overnight training pipeline")
     parser.add_argument("--dry-run", action="store_true", help="Verify setup only")
+    parser.add_argument("--fresh", action="store_true", help="Force re-run data pipeline from scratch")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -71,9 +72,9 @@ def main() -> None:
 
     logger.info("=== OVERNIGHT PIPELINE START ===")
 
-    # Stage 1: Data pipeline (skip if dataset already exists)
-    dataset_yaml = settings.YOLO_ROOT / "dataset.yaml"
-    if dataset_yaml.exists():
+    # Stage 1: Data pipeline (skip if dataset already has images, unless --fresh)
+    train_images = settings.YOLO_ROOT / "train" / "images"
+    if not args.fresh and train_images.exists() and any(train_images.iterdir()):
         logger.info("=== STAGE 1: SKIPPED (dataset already exists at %s) ===", settings.YOLO_ROOT)
     else:
         logger.info("=== STAGE 1: DATA PREPARATION ===")
