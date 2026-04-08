@@ -61,7 +61,7 @@ class TrainArgsBuilder:
             "save_period": self.config.save_period,
             "optimizer": self.config.optimizer,
             "name": run_name,
-            "project": project,
+            "project": str(Path(project).resolve()),
             "exist_ok": True,
             "verbose": False,
             "workers": self.config.workers,
