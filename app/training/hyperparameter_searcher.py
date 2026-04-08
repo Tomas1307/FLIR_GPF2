@@ -72,17 +72,94 @@ class HyperparameterSearcher:
         """
         return [
             HyperparameterConfig(
-                name="conservative",
-                batch_size=40,
-                lr0=0.005,
-                lrf=0.01,
-                cos_lr=True,
-                weight_decay=0.001,
-                dropout=0.1,
-                mosaic=0.8,
-                mixup=0.0,
+                name="baseline_defaults",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
-                model_weights="yolo11m.pt",
+            ),
+            HyperparameterConfig(
+                name="high_lr_aggressive",
+                batch_size=64, lr0=0.02, lrf=0.1, cos_lr=True,
+                weight_decay=0.001, dropout=0.0, mosaic=1.0, mixup=0.2,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="low_lr_stable",
+                batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="medium_lr",
+                batch_size=64, lr0=0.005, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="heavy_augmentation",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.2, mosaic=1.0, mixup=0.3,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="minimal_augmentation",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.0, mosaic=0.3, mixup=0.0,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="high_dropout",
+                batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.3, mosaic=0.8, mixup=0.1,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="high_res",
+                batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=800,
+            ),
+            HyperparameterConfig(
+                name="high_res_augmented",
+                batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=1.0, mixup=0.2,
+                image_size=800,
+            ),
+            HyperparameterConfig(
+                name="cosine_off",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=False,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="high_weight_decay",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.005, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="large_batch",
+                batch_size=80, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640,
+            ),
+            HyperparameterConfig(
+                name="adam_optimizer",
+                batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, optimizer="Adam",
+            ),
+            HyperparameterConfig(
+                name="adamw_optimizer",
+                batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.01, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, optimizer="AdamW",
+            ),
+            HyperparameterConfig(
+                name="warm_restart",
+                batch_size=64, lr0=0.015, lrf=0.05, cos_lr=True,
+                weight_decay=0.0005, dropout=0.1, mosaic=0.8, mixup=0.1,
+                image_size=640,
             ),
         ]
 
@@ -121,6 +198,7 @@ class HyperparameterSearcher:
             mosaic=hp_config.mosaic,
             mixup=hp_config.mixup,
             image_size=hp_config.image_size,
+            optimizer=hp_config.optimizer,
             epochs=self.base_epochs,
             patience=5,
         )

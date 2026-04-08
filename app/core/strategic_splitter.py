@@ -96,19 +96,23 @@ class StrategicSplitter:
             n_test,
         )
 
+        assigned = set(splits["train"] + splits["val"] + splits["test"])
+
+        remaining: List[str] = []
         for class_id, stems in images_by_class.items():
             if class_id == target:
                 continue
-            stems_copy = stems.copy()
-            random.shuffle(stems_copy)
-            n_t = int(len(stems_copy) * self.test_size)
-            n_v = int(len(stems_copy) * self.val_size)
-            splits["test"].extend(stems_copy[:n_t])
-            splits["val"].extend(stems_copy[n_t : n_t + n_v])
-            splits["train"].extend(stems_copy[n_t + n_v :])
+            for stem in stems:
+                if stem not in assigned:
+                    remaining.append(stem)
+                    assigned.add(stem)
 
-        for key in splits:
-            splits[key] = list(set(splits[key]))
+        random.shuffle(remaining)
+        n_t = int(len(remaining) * self.test_size)
+        n_v = int(len(remaining) * self.val_size)
+        splits["test"].extend(remaining[:n_t])
+        splits["val"].extend(remaining[n_t : n_t + n_v])
+        splits["train"].extend(remaining[n_t + n_v :])
 
         logger.info(
             "Final split - Train: %d, Val: %d, Test: %d",

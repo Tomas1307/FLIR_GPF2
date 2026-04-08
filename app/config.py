@@ -94,8 +94,8 @@ class Settings(BaseSettings):
 
     # -- Training (conservative winner) --------------------------------------
     MODEL_WEIGHTS: str = Field(default="yolo11m.pt")
-    BATCH_SIZE: int = Field(default=40)
-    LR0: float = Field(default=0.005)
+    BATCH_SIZE: int = Field(default=64)
+    LR0: float = Field(default=0.01)
     LRF: float = Field(default=0.01)
     EPOCHS: int = Field(default=100)
     PATIENCE: int = Field(default=3)
@@ -105,6 +105,7 @@ class Settings(BaseSettings):
     MIXUP: float = Field(default=0.0)
     IMAGE_SIZE: int = Field(default=640)
     COS_LR: bool = Field(default=True)
+    SAVE_PERIOD: int = Field(default=10)
 
     # -- Fine-tuning ---------------------------------------------------------
     FINETUNE_LR: float = Field(default=0.0005)
@@ -116,8 +117,11 @@ class Settings(BaseSettings):
     CONF_THRESHOLD_NORMAL: float = Field(default=0.25)
     IOU_THRESHOLD: float = Field(default=0.6)
 
+    # -- Recall gate ---------------------------------------------------------
+    RECALL_GATE: float = Field(default=0.81)
+
     # -- Hardware / misc -----------------------------------------------------
-    GPU_MEMORY_GB: int = Field(default=24)
+    GPU_MEMORY_GB: int = Field(default=48)
     RANDOM_SEED: int = Field(default=42)
     BODEGA_REMOVAL_RATIO: float = Field(default=0.80)
     WORKERS: int = Field(default=16)

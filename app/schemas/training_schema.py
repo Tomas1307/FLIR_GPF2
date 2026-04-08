@@ -36,6 +36,11 @@ class TrainingConfig(BaseModel):
     epochs: int = Field(default=100)
     patience: int = Field(default=3)
     workers: int = Field(default=16)
+    save_period: int = Field(default=10)
+    optimizer: str = Field(
+        default="auto",
+        description="Optimizer for training (auto, SGD, Adam, AdamW).",
+    )
     resume_from: Optional[str] = Field(
         default=None,
         description="Path to a checkpoint to resume training from.",

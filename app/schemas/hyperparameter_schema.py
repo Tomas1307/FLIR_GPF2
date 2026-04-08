@@ -29,3 +29,7 @@ class HyperparameterConfig(BaseModel):
     mixup: float = Field(default=0.0)
     image_size: int = Field(default=640)
     model_weights: str = Field(default="yolo11m.pt")
+    optimizer: str = Field(
+        default="auto",
+        description="Optimizer for training (auto, SGD, Adam, AdamW).",
+    )

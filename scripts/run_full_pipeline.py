@@ -8,7 +8,10 @@ Usage::
     python scripts/run_full_pipeline.py
 """
 
+import sys
+
 from app.config import settings
+from app.core.dataset_validator import DatasetValidator
 from app.facades.data_pipeline_facade import DataPipelineFacade
 from app.facades.training_pipeline_facade import TrainingPipelineFacade
 from app.utils.logger import get_logger
@@ -22,6 +25,13 @@ def main() -> None:
     logger.info("=== DATA PREPARATION ===")
     data_facade = DataPipelineFacade()
     data_facade.run()
+
+    # Stage 1.5: Validate dataset
+    logger.info("=== DATASET VALIDATION ===")
+    validator = DatasetValidator(settings.YOLO_ROOT)
+    if not validator.validate_all():
+        logger.error("Validation failed — aborting pipeline")
+        sys.exit(1)
 
     # Stage 2: Training pipeline (includes preprocessing + training)
     logger.info("=== TRAINING PIPELINE ===")
