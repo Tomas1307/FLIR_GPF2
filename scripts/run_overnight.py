@@ -1,25 +1,14 @@
-"""Run the full pipeline overnight: data -> validate -> train -> hyperparam search.
+"""Run the overnight pipeline: data -> validate -> hyperparameter search.
 
 Designed to run unattended in a tmux session. All results are saved
 incrementally so nothing is lost if the process is interrupted.
 
-Resilience logic:
-  - If a stage's output already exists it is skipped (unless ``--fresh``).
-  - If validation fails the data pipeline is re-run once and validation
-    retried before aborting.
-  - Preprocessing (CLAHE + noise filter) is integrated into the data
-    pipeline *before* augmentation so that augmented images inherit the
-    enhancement.  A standalone preprocessing stage is kept as fallback
-    for datasets built without the integrated step.
-  - Training and search failures are logged but do not abort the pipeline.
-
 Usage::
 
-    python -m scripts.run_overnight                    # full run
-    python -m scripts.run_overnight --dry-run          # verify setup only
-    python -m scripts.run_overnight --fresh            # force re-run from scratch
-    python -m scripts.run_overnight --resume           # auto-detect latest checkpoint
-    python -m scripts.run_overnight --resume path/to/last.pt  # explicit checkpoint
+    python -m scripts.run_overnight                              # build dataset + search
+    python -m scripts.run_overnight --dataset path/to/dataset    # skip pipeline, use existing dataset
+    python -m scripts.run_overnight --fresh                      # force rebuild dataset from scratch
+    python -m scripts.run_overnight --dry-run                    # verify setup only
 """
 
 import argparse
@@ -243,16 +232,16 @@ def stage_hyperparameter_search(dataset_root: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    """Execute the overnight pipeline with resilience logic."""
+    """Execute the overnight pipeline."""
     parser = argparse.ArgumentParser(description="Overnight training pipeline")
     parser.add_argument("--dry-run", action="store_true", help="Verify setup only")
-    parser.add_argument("--fresh", action="store_true", help="Force re-run all stages from scratch")
+    parser.add_argument("--fresh", action="store_true", help="Force rebuild dataset from scratch")
     parser.add_argument(
-        "--resume",
-        nargs="?",
-        const="auto",
-        metavar="CHECKPOINT",
-        help="Resume conservative training. Omit path to auto-detect latest checkpoint.",
+        "--dataset",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Path to a ready-to-use YOLO dataset (skip data pipeline).",
     )
     args = parser.parse_args()
 
@@ -262,66 +251,41 @@ def main() -> None:
 
     logger.info("=== OVERNIGHT PIPELINE START ===")
 
-    # -- Stage 1: Data pipeline (includes preprocessing before augmentation) ---
-    if not stage_data_pipeline(args.fresh):
-        logger.error("Data pipeline failed — aborting")
-        sys.exit(1)
-
-    # -- Stage 2: Validation (with retry) --------------------------------------
-    for attempt in range(1 + MAX_VALIDATION_RETRIES):
-        if stage_validate():
-            break
-
-        if attempt < MAX_VALIDATION_RETRIES:
-            logger.warning(
-                "Validation failed — re-running data pipeline (attempt %d/%d)",
-                attempt + 1, MAX_VALIDATION_RETRIES,
-            )
-            if not stage_data_pipeline(fresh=True):
-                logger.error("Data pipeline retry failed — aborting")
-                sys.exit(1)
-        else:
-            logger.error("Validation failed after %d retries — aborting", MAX_VALIDATION_RETRIES)
+    # -- Determine dataset -----------------------------------------------------
+    if args.dataset:
+        effective_dataset = Path(args.dataset)
+        if not _split_has_images(effective_dataset):
+            logger.error("Dataset not found or empty: %s", effective_dataset)
+            sys.exit(1)
+        logger.info("Using custom dataset: %s", effective_dataset)
+    else:
+        # -- Stage 1: Data pipeline --------------------------------------------
+        if not stage_data_pipeline(args.fresh):
+            logger.error("Data pipeline failed — aborting")
             sys.exit(1)
 
-    # -- Determine effective dataset -------------------------------------------
-    # If the data pipeline ran fresh, preprocessing is already integrated
-    # (Stage 5/9 inside DataPipelineFacade).  If the dataset was skipped
-    # (pre-existing), fall back to standalone preprocessing.
-    effective_dataset = settings.YOLO_ROOT
-    if not args.fresh and _split_has_images(settings.YOLO_ROOT):
-        # Dataset was pre-existing — may lack integrated preprocessing.
-        # Run standalone preprocessing as fallback.
-        effective_dataset = stage_preprocess_fallback()
-
-    logger.info("Effective training dataset: %s", effective_dataset)
-    _ensure_dataset_yaml(effective_dataset)
-
-    # -- Resolve resume checkpoint ---------------------------------------------
-    resume_ckpt: Path | None = None
-    if args.resume:
-        if args.resume == "auto":
-            resume_ckpt = _find_latest_checkpoint()
-            if resume_ckpt:
-                logger.info("Auto-detected checkpoint: %s", resume_ckpt)
+        # -- Stage 2: Validation (with retry) ----------------------------------
+        for attempt in range(1 + MAX_VALIDATION_RETRIES):
+            if stage_validate():
+                break
+            if attempt < MAX_VALIDATION_RETRIES:
+                logger.warning(
+                    "Validation failed — re-running data pipeline (attempt %d/%d)",
+                    attempt + 1, MAX_VALIDATION_RETRIES,
+                )
+                if not stage_data_pipeline(fresh=True):
+                    logger.error("Data pipeline retry failed — aborting")
+                    sys.exit(1)
             else:
-                logger.warning("No checkpoint found for --resume auto — starting fresh training")
-        else:
-            resume_ckpt = Path(args.resume)
-            if not resume_ckpt.exists():
-                logger.error("Checkpoint not found: %s — aborting", resume_ckpt)
+                logger.error("Validation failed after %d retries — aborting", MAX_VALIDATION_RETRIES)
                 sys.exit(1)
 
-    # -- Stage 3: Conservative training ----------------------------------------
-    recall = stage_training(effective_dataset, resume_from=resume_ckpt)
+        effective_dataset = settings.YOLO_ROOT
 
-    # -- Stage 4: Recall gate --------------------------------------------------
-    if recall < settings.RECALL_GATE:
-        logger.warning("Recall %.4f < %.2f — below target", recall, settings.RECALL_GATE)
-    else:
-        logger.info("Recall %.4f >= %.2f — above target", recall, settings.RECALL_GATE)
+    _ensure_dataset_yaml(effective_dataset)
+    logger.info("Effective training dataset: %s", effective_dataset)
 
-    # -- Stage 5: Hyperparameter search (always runs) --------------------------
+    # -- Hyperparameter search -------------------------------------------------
     stage_hyperparameter_search(effective_dataset)
 
     logger.info("=== OVERNIGHT PIPELINE COMPLETE ===")

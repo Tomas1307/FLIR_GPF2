@@ -70,117 +70,231 @@ class HyperparameterSearcher:
         Returns:
             List of ``HyperparameterConfig`` schemas.
         """
-        return [
+        # -- yolo11m configs ---------------------------------------------------
+        yolo11m = [
             HyperparameterConfig(
-                name="baseline_defaults",
+                name="y11m_baseline",
                 batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="high_lr_aggressive",
+                name="y11m_high_lr",
                 batch_size=64, lr0=0.02, lrf=0.1, cos_lr=True,
                 weight_decay=0.001, dropout=0.0, mosaic=1.0, mixup=0.2,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="low_lr_stable",
+                name="y11m_low_lr",
                 batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="medium_lr",
+                name="y11m_medium_lr",
                 batch_size=64, lr0=0.005, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="heavy_augmentation",
+                name="y11m_heavy_aug",
                 batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.2, mosaic=1.0, mixup=0.3,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="minimal_augmentation",
+                name="y11m_minimal_aug",
                 batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.0, mosaic=0.3, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="high_dropout",
+                name="y11m_high_dropout",
                 batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.3, mosaic=0.8, mixup=0.1,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="high_res",
+                name="y11m_high_res",
                 batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=800,
             ),
             HyperparameterConfig(
-                name="high_res_augmented",
+                name="y11m_high_res_aug",
                 batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=1.0, mixup=0.2,
                 image_size=800,
             ),
             HyperparameterConfig(
-                name="cosine_off",
+                name="y11m_cosine_off",
                 batch_size=64, lr0=0.01, lrf=0.01, cos_lr=False,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="high_weight_decay",
+                name="y11m_high_wd",
                 batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.005, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="large_batch",
+                name="y11m_large_batch",
                 batch_size=80, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640,
             ),
             HyperparameterConfig(
-                name="adam_optimizer",
+                name="y11m_adam",
                 batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640, optimizer="Adam",
             ),
             HyperparameterConfig(
-                name="adamw_optimizer",
+                name="y11m_adamw",
                 batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
                 weight_decay=0.01, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640, optimizer="AdamW",
             ),
             HyperparameterConfig(
-                name="warm_restart",
+                name="y11m_warm_restart",
                 batch_size=64, lr0=0.015, lrf=0.05, cos_lr=True,
                 weight_decay=0.0005, dropout=0.1, mosaic=0.8, mixup=0.1,
                 image_size=640,
             ),
             # -- yolo11l configs -----------------------------------------------
             HyperparameterConfig(
-                name="large_baseline",
+                name="y11l_baseline",
                 batch_size=32, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640, model_weights="yolo11l.pt",
             ),
             HyperparameterConfig(
-                name="large_high_res",
+                name="y11l_high_res",
                 batch_size=24, lr0=0.01, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=800, model_weights="yolo11l.pt",
             ),
             HyperparameterConfig(
-                name="large_adam",
+                name="y11l_adam",
                 batch_size=32, lr0=0.001, lrf=0.01, cos_lr=True,
                 weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
                 image_size=640, model_weights="yolo11l.pt", optimizer="Adam",
             ),
         ]
+        # -- yolo26m configs ---------------------------------------------------
+        yolo26m = [
+            HyperparameterConfig(
+                name="y26m_baseline",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_high_lr",
+                batch_size=64, lr0=0.02, lrf=0.1, cos_lr=True,
+                weight_decay=0.001, dropout=0.0, mosaic=1.0, mixup=0.2,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_low_lr",
+                batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_medium_lr",
+                batch_size=64, lr0=0.005, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_heavy_aug",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.2, mosaic=1.0, mixup=0.3,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_minimal_aug",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.0, mosaic=0.3, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_high_dropout",
+                batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.3, mosaic=0.8, mixup=0.1,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_high_res",
+                batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=800, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_high_res_aug",
+                batch_size=48, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=1.0, mixup=0.2,
+                image_size=800, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_cosine_off",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=False,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_high_wd",
+                batch_size=64, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.005, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_large_batch",
+                batch_size=80, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            HyperparameterConfig(
+                name="y26m_adam",
+                batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt", optimizer="Adam",
+            ),
+            HyperparameterConfig(
+                name="y26m_adamw",
+                batch_size=64, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.01, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26m.pt", optimizer="AdamW",
+            ),
+            HyperparameterConfig(
+                name="y26m_warm_restart",
+                batch_size=64, lr0=0.015, lrf=0.05, cos_lr=True,
+                weight_decay=0.0005, dropout=0.1, mosaic=0.8, mixup=0.1,
+                image_size=640, model_weights="yolo26m.pt",
+            ),
+            # -- yolo26l configs -----------------------------------------------
+            HyperparameterConfig(
+                name="y26l_baseline",
+                batch_size=32, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26l.pt",
+            ),
+            HyperparameterConfig(
+                name="y26l_high_res",
+                batch_size=24, lr0=0.01, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=800, model_weights="yolo26l.pt",
+            ),
+            HyperparameterConfig(
+                name="y26l_adam",
+                batch_size=32, lr0=0.001, lrf=0.01, cos_lr=True,
+                weight_decay=0.001, dropout=0.1, mosaic=0.8, mixup=0.0,
+                image_size=640, model_weights="yolo26l.pt", optimizer="Adam",
+            ),
+        ]
+        return yolo11m + yolo26m
 
     def train_single_config(
         self,

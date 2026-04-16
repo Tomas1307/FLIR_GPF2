@@ -68,3 +68,4 @@ val/
 *.yaml
 .claude/
 CLAUDE.md
+Dataset_Balanceado_Preproc/
