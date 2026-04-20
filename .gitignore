@@ -69,3 +69,4 @@ val/
 .claude/
 CLAUDE.md
 Dataset_Balanceado_Preproc/
+*.zip

@@ -425,11 +425,23 @@ class HyperparameterSearcher:
         with open(self.output_dir / "partial_results.json", "w") as f:
             json.dump(self.results, f, indent=2)
 
+    def _run_already_completed(
+        self, run_id: int, hp_config: HyperparameterConfig, dataset_path: str,
+    ) -> bool:
+        """Check if a run already has a saved best.pt checkpoint."""
+        run_name = (
+            f"hp_search_{run_id}_{hp_config.name}_{Path(dataset_path).name}"
+        )
+        best_pt = Path("runs") / run_name / "weights" / "best.pt"
+        return best_pt.exists()
+
     def run_search(
         self,
         configurations: Optional[List[HyperparameterConfig]] = None,
     ) -> List[Dict[str, Any]]:
         """Execute the full hyperparameter search.
+
+        Automatically resumes by skipping runs whose best.pt already exists.
 
         Args:
             configurations: Configurations to evaluate.  Defaults to
@@ -445,10 +457,19 @@ class HyperparameterSearcher:
         logger.info("Starting search: %d experiments", total)
 
         run_id = 0
+        skipped = 0
         for dataset_path in self.dataset_paths:
             logger.info("Dataset: %s", Path(dataset_path).name)
             for hp_config in configurations:
                 run_id += 1
+                if self._run_already_completed(run_id, hp_config, dataset_path):
+                    skipped += 1
+                    logger.info(
+                        "Run %d/%d: %s — SKIPPED (best.pt exists)",
+                        run_id, total, hp_config.name,
+                    )
+                    continue
+                logger.info("Resuming from run %d/%d", run_id, total)
                 result = self.train_single_config(
                     hp_config, dataset_path, run_id
                 )
@@ -457,5 +478,7 @@ class HyperparameterSearcher:
                     self._save_partial()
                 time.sleep(2)
 
+        if skipped:
+            logger.info("Skipped %d already-completed runs", skipped)
         self.analyzer.summarise_search_results(self.results, self.target_class)
         return self.results
